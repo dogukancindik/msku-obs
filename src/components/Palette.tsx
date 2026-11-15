@@ -34,7 +34,7 @@ export function CommandPalette() {
       { id: 'a-new', label: 'Yeni mesaj yaz', hint: 'İşlem', icon: PenSquare, run: () => go('messages', { tab: 'compose' }), keywords: 'mesaj yaz hoca' },
       { id: 'a-theme', label: 'Koyu / açık tema', hint: 'Ayar', icon: Moon, run: () => set('theme', settings.theme === 'dark' ? 'light' : 'dark'), keywords: 'tema koyu dark' },
     ];
-    const cs: Cmd[] = D.current.map((c) => ({ id: 'c-' + c.code, label: `${c.code} · ${c.name}`, hint: 'Programda gör', icon: BookOpen, run: () => go('schedule', { course: c.code }), keywords: `${c.code} ${c.code.replace(' ', '')} ${c.name}` }));
+    const cs: Cmd[] = D.current.map((c) => ({ id: 'c-' + c.code, label: `${c.code} · ${c.name}`, hint: c.clash || c.t + c.u === 0 ? 'Ders bilgisi' : 'Programda gör', icon: BookOpen, run: () => (c.clash || c.t + c.u === 0 ? go('courses') : go('schedule', { course: c.code })), keywords: `${c.code} ${c.code.replace(' ', '')} ${c.name}` }));
     return [...actions, ...pages, ...cs];
   }, [go, set, settings.theme]);
 

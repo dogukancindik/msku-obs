@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { AlertCircle, Check, CheckCircle2, Clock, Eye, Info, Send, XCircle } from 'lucide-react';
 import { useApp, useData } from '../lib/store';
-import { CURRICULUM, REG, student } from '../data/msku';
+import { REG } from '../data/msku';
+import { springCandidates, springTermOf } from '../lib/registration';
 import { cx, fmtDate } from '../lib/util';
 import { Button, Card, CardHead, Chip, PageHeader } from '../components/ui';
 
@@ -37,14 +38,16 @@ export default function GradCredit() {
   const [course, setCourse] = useState('');
   const [reason, setReason] = useState('');
   const [tried, setTried] = useState(false);
-  const pool = CURRICULUM.filter((c) => c.semester > D.semester);
+  // talep Bahar dönemi için: yalnızca Bahar'da açılan ve öğrencinin alabileceği dersler (kayıt kurallarıyla aynı liste)
+  const spring = springTermOf(D);
+  const pool = springCandidates(D).map((x) => x.course);
   const errors = { course: !course, reason: reason.trim().length < 20 };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setTried(true);
     if (!canFill || errors.course || errors.reason || extra < 1) return;
-    const r: Request = { id: String(Date.now()), term: '2026-2027 Bahar', extra, course, reason: reason.trim(), date: new Date().toISOString(), status: 'pending' };
+    const r: Request = { id: String(Date.now()), term: spring.name, extra, course, reason: reason.trim(), date: new Date().toISOString(), status: 'pending' };
     const next = [r, ...list];
     setList(next);
     save(me.email, next);
@@ -106,7 +109,7 @@ export default function GradCredit() {
             <div className="row" style={{ flexWrap: 'wrap', alignItems: 'flex-start' }}>
               <label className="field" style={{ flex: '1 1 180px' }}>
                 <span>Dönem</span>
-                <input className="input" value="2026-2027 Bahar" readOnly />
+                <input className="input" value={spring.name} readOnly />
               </label>
               <label className="field" style={{ flex: '1 1 180px' }}>
                 <span>Ek AKTS</span>

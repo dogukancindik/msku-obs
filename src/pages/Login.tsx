@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, ArrowRight, Eye, EyeOff, Info, KeyRound, Loader2, Lock, Mail } from 'lucide-react';
+import { AlertCircle, ArrowRight, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { checkPassword, nameFromEmail, useApp } from '../lib/store';
 import { Logo } from '../components/ui';
 import { EMAIL_DOMAIN } from '../data/msku';
 import { cx } from '../lib/util';
 
 const LAST_USER = 'msku.lastUser';
+const EDEVLET_URL = 'https://giris.turkiye.gov.tr/Giris/gir';
 
 export default function Login() {
   const { login } = useApp();
@@ -62,22 +63,12 @@ export default function Login() {
     <div className="login">
       <section className="login-brand">
         <div className="lb-top">
-          <Logo size={64} className="on-dark" />
+          <Logo size={88} className="on-dark" />
           <div>
             <strong>Muğla Sıtkı Koçman Üniversitesi</strong>
             <span>Öğrenci Bilgi Sistemi</span>
           </div>
         </div>
-        <div className="lb-copy">
-          <h1>Notların, programın ve mezuniyet durumun — tek bakışta.</h1>
-          <p>Yazılım Mühendisliği öğrencileri için sade, erişilebilir ve hızlı OBS.</p>
-        </div>
-        <ul className="lb-points">
-          <li>Tüm özet kartlarından tek tıkla ilgili sayfaya geçin</li>
-          <li>Transkript senaryosu ile AGNO’nuzu anında hesaplayın</li>
-          <li>Devamsızlık sınırınızı görsel olarak takip edin</li>
-        </ul>
-        <span className="lb-foot">SE4513 Human-Computer Interaction · Prototip</span>
       </section>
 
       <section className="login-panel">
@@ -106,7 +97,7 @@ export default function Login() {
             {err.user ? (
               <span className="field-error" id="user-help"><AlertCircle size={13} /> {err.user}</span>
             ) : (
-              <span className="field-hint" id="user-help">{email ? <>Giriş adresi: <strong>{email}</strong> · Hoş geldin, <strong>{nameFromEmail(email)}</strong></> : 'Örn. ali.kirgiz — uzantı otomatik eklenir, adın e-postandan oluşturulur.'}</span>
+              <span className="field-hint" id="user-help">{email && <>Giriş adresi: <strong>{email}</strong> · Hoş geldin, <strong>{nameFromEmail(email)}</strong></>}</span>
             )}
           </label>
 
@@ -135,10 +126,11 @@ export default function Login() {
             {busy ? <><Loader2 size={18} className="spin" /> Giriş yapılıyor…</> : locked ? <>Tekrar deneyin: {Math.ceil((lockUntil - now) / 1000)} sn</> : <>Giriş yap <ArrowRight size={18} /></>}
           </button>
 
-          <div className="demo-note">
-            <Info size={15} aria-hidden />
-            <span><strong>Demo şifresi:</strong> adınız ve soyadınız bitişik + 123 (ör. ali.kirgiz → <span className="mono">alikirgiz123</span>). Şifrenizi değiştirdiyseniz yeni şifrenizi kullanın. <strong>Gerçek OBS şifrenizi yazmayın.</strong></span>
-          </div>
+          <div className="login-or" aria-hidden><span>veya</span></div>
+          {/* Yalnızca e-Devlet giriş sayfasına yönlendirir; kimlik bilgisi alınmaz. */}
+          <a className="btn btn-lg btn-edevlet" href={EDEVLET_URL} rel="noopener noreferrer">
+            <ShieldCheck size={18} aria-hidden /> e-Devlet ile Giriş
+          </a>
         </form>
       </section>
     </div>

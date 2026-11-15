@@ -1009,3 +1009,24 @@ button.ann-item:hover { background: var(--surface-2); }
 .wp-block { display: block; padding: 6px 8px; border-radius: 8px; background: var(--brand-soft); border-left: 3px solid var(--brand); overflow-wrap: anywhere; }
 .wp-block.clash { background: var(--warning-soft); border-left-color: var(--warning); }
 @media (max-width: 900px) { .week-preview { grid-template-columns: 1fr; } }
+
+/* giriş ekranı: sade marka paneli + e-Devlet */
+.login-brand { justify-content: center; align-items: center; }
+.login-brand .lb-top { flex-direction: column; text-align: center; gap: 18px; }
+.login-brand .lb-top strong { font-size: 1.5rem; letter-spacing: -0.01em; }
+.login-brand .lb-top span { font-size: 1rem; margin-top: 4px; display: block; }
+.login-or { display: flex; align-items: center; gap: 12px; color: var(--text-3); font-size: 0.8rem; }
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.btn-edevlet { background: #C8102E; color: #fff; border: 1px solid #C8102E; justify-content: center; text-decoration: none; }
+.btn-edevlet:hover { background: #A80D26; border-color: #A80D26; color: #fff; }
+.btn-edevlet:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (max-width: 960px) { .login-brand .lb-top { flex-direction: row; text-align: left; } .login-brand .lb-top strong { font-size: 1.05rem; } }
+@media (max-width: 960px) {
+  .login { grid-template-columns: minmax(0, 1fr); }
+  .login-brand, .login-panel { min-width: 0; }
+  .login-brand .lb-top > :first-child { width: 56px !important; height: 56px !important; flex: none; }
+  .login-brand .lb-top > :first-child img { width: 100%; height: 100%; }
+}
+.login-panel { grid-template-columns: minmax(0, 1fr); }
+.login-form { justify-self: center; min-width: 0; }
+.login-form .input-group input { min-width: 0; }

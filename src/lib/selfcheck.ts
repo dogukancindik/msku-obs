@@ -108,6 +108,12 @@ export function checkProfile(D: StudentData): string[] {
     else if (m.kind === 'Ders' && m.from !== c.instructor && m.to !== c.instructor) e.push(`mesaj ${m.id}: ${m.course} hocası (${c.instructor}) ile uyuşmuyor`);
   }
 
+  const lab = D.sent.find((m) => m.subject.startsWith('Laboratuvar telafisi'));
+  if (lab && !((D.absence[lab.course!]?.[7] ?? 0) > 0)) e.push(`${lab.course} laboratuvara katılmadım mesajı var ama devamsızlık kaydı yok`);
+  const ann = D.inbox.find((m) => m.subject.includes('Ara sınav notları açıklandı'));
+  if (ann) { const g = D.grades.find((x) => x.code === ann.course); if (!g || g.vize.score === undefined) e.push(`${ann.course} ara sınav notu açıklandı mesajı var ama not yok`);
+    else if (Math.round((Date.now() - ann.date.getTime()) / 864e5) - (g.vize.announced ?? 0) > 1) e.push(`${ann.course} not duyurusu tarihi not listesindeki tarihle uyuşmuyor`); }
+
   // ---- Bahar ders kaydı (bir sonraki çift yarıyıl)
   const cands = springCandidates(D);
   const spring = offeredIn('Bahar');
