@@ -45,6 +45,12 @@ export default function Dashboard() {
   list = [...list].sort((a, b) => a.start.localeCompare(b.start));
   const nextExams = D.exams.filter((e) => daysUntil(e.date) >= 0).sort((a, b) => +a.date - +b.date).slice(0, 3);
   const msgs = inbox.slice(0, 3);
+  // duyurular: sınav salonu duyurusu öğrencinin kendi yaklaşan ara sınavından (salon = ortak programdaki derslik)
+  const nextMid = D.exams.filter((e) => e.type === 'Ara Sınav' && daysUntil(e.date) >= 0).sort((a, b) => +a.date - +b.date)[0];
+  const announcements = [
+    ...(nextMid ? [{ id: 'a-exam', title: 'Ara sınav salon bilgisi', body: `${nextMid.code} ara sınavı ${fmtDate(nextMid.date, { day: 'numeric', month: 'long' })} ${fmtTime(nextMid.date)}’da ${nextMid.room} salonunda yapılacaktır.` }] : []),
+    ...ANNOUNCEMENTS.filter((a) => a.id !== 'a1'),
+  ];
 
   return (
     <div className="dash">
@@ -171,7 +177,7 @@ export default function Dashboard() {
                 </button>
               </li>
             ))}
-            {ANNOUNCEMENTS.map((a) => (
+            {announcements.map((a) => (
               <li key={a.id}>
                 <div className="ann-item static">
                   <span className="ann-dot info" aria-hidden />

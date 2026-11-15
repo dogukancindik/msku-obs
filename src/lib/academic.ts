@@ -270,7 +270,7 @@ export function generate(email: string, displayName: string): StudentData {
   const inbox: Message[] = [
     { id: 'm1', from: advisor.name, to: displayName, kind: 'Danışman', date: addDays(-1, 16, 20), read: false, subject: 'Bahar dönemi ders kaydı ön görüşmesi',
       body: `Merhaba ${displayName.split(' ')[0]},\n\nBahar dönemi ders seçimin için ${semester + 1}. yarıyıl müfredatına birlikte bakalım.${springRetakes.length ? ` Başarısız olduğun ${springRetakes.map((f) => f.course.code).join(', ')} ${springRetakes.length > 1 ? 'derslerini' : 'dersini'} Bahar döneminde öncelikli olarak (alttan) seçmen gerekiyor; kalan AKTS hakkını buna göre planlayalım.` : ''}${agnoNow < 2 ? ` AGNO’n 2.00’ın altında olduğu için dönemlik üst sınırın 30 AKTS.` : ''} Kayıt haftasından önce ${advisor.hours} arasında ofisimde görüşebiliriz.\n\nİyi çalışmalar.` },
-    ...(hwCourse ? [{ id: 'm2', from: hwCourse.instructor!, to: displayName, course: hwCourse.code, kind: 'Ders' as const, date: addDays(-1, 11, 5), read: false,
+    ...(hwCourse ? [{ id: 'm2', from: hwCourse.instructor!, to: displayName, course: hwCourse.code, kind: 'Ders' as const, date: addDays(-(hw?.vize.announced ?? 1), 11, 5), read: false,
       subject: `${hwCourse.code} — Ara sınav notları açıklandı`,
       body: `Sevgili öğrenciler,\n\n${hwCourse.name} ara sınav notları OBS’ye girilmiştir. Sınav kâğıtlarını Perşembe 10:30’da ofisimde inceleyebilirsiniz.` }] : []),
     ...(otherCourse ? [{ id: 'm3', from: otherCourse.instructor!, to: displayName, course: otherCourse.code, kind: 'Ders' as const, date: addDays(-3, 9, 40), read: true,
@@ -278,10 +278,18 @@ export function generate(email: string, displayName: string): StudentData {
       body: `Merhaba,\n\n${otherCourse.name} dersinin dönem projesi için ara rapor teslim tarihi önümüzdeki hafta Cuma günüdür. Raporları ders sayfasına yükleyiniz.` }] : []),
     { id: 'm4', from: 'Yazılım Mühendisliği Bölüm Başkanlığı', to: 'Tüm öğrenciler', kind: 'Bölüm', date: addDays(-5, 14, 0), read: true, subject: ANNOUNCEMENTS[1].title, body: ANNOUNCEMENTS[1].body },
   ];
-  const sentTo = current.find((c) => c.instructor && c.u > 0) ?? current.find((c) => c.instructor);
-  const sent: Message[] = sentTo ? [{ id: 's1', from: displayName, to: sentTo.instructor!, course: sentTo.code, kind: 'Ders', date: addDays(-8, 18, 30), read: true,
-    subject: 'Laboratuvar telafisi hakkında',
-    body: `Hocam merhaba,\n\nGeçen haftaki ${sentTo.code} laboratuvar oturumuna sağlık raporum nedeniyle katılamadım. Telafi için uygun bir zaman olup olmadığını öğrenebilir miyim?\n\n${displayName}` }] : [];
+  // Gönderilen mesaj: "geçen hafta laboratuvara katılamadım" yalnızca devamsızlık kaydında o hafta (8. hafta) gerçekten
+  // devamsız görünen, uygulamalı ve programda olan bir ders için yazılır; yoksa genel bir proje sorusu gönderilir.
+  const labMissed = current.find((c) => c.instructor && c.u > 0 && !c.clash && (absence[c.code]?.[7] ?? 0) > 0);
+  const anyCourse = current.find((c) => c.instructor && c.t + c.u > 0 && !c.clash);
+  const sent: Message[] = labMissed
+    ? [{ id: 's1', from: displayName, to: labMissed.instructor!, course: labMissed.code, kind: 'Ders', date: addDays(-8, 18, 30), read: true,
+      subject: 'Laboratuvar telafisi hakkında',
+      body: `Hocam merhaba,\n\nBu haftaki ${labMissed.code} laboratuvar oturumuna sağlık raporum nedeniyle katılamadım. Telafi için uygun bir zaman olup olmadığını öğrenebilir miyim?\n\n${displayName}` }]
+    : anyCourse ? [{ id: 's1', from: displayName, to: anyCourse.instructor!, course: anyCourse.code, kind: 'Ders', date: addDays(-8, 18, 30), read: true,
+      subject: 'Dönem projesi hakkında soru',
+      body: `Hocam merhaba,\n\n${anyCourse.code} dönem projesinde grup üye sayısı en fazla kaç olabilir? Ara rapor şablonunu ders sayfasında bulamadım.\n\n${displayName}` }]
+      : [];
 
   // statistics
   const terms = Array.from({ length: semester }, (_, i) => ({ semester: i + 1, name: termName(entryYear, i + 1) }));

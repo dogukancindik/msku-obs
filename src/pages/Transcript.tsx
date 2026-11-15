@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Info, Plus, Printer, RotateCcw, Trash2 } from 'lucide-react';
 import { useApp, useData } from '../lib/store';
-import { CURRICULUM, FALL_POOL, LETTERS, POINTS, isFail, isGpaGrade, student, typeLabel, type Letter } from '../data/msku';
+import { LETTERS, POINTS, isFail, isGpaGrade, student, typeLabel, type Letter } from '../data/msku';
+import { CATALOG, catalogCourse } from '../data/timetable';
+import { springTermOf } from '../lib/registration';
 import { cumulativeGpa, cx, fmtGpa, gpa, latestAttempts } from '../lib/util';
 import { Button, Card, Chip, Logo, Modal, PageHeader, Tabs } from '../components/ui';
 
@@ -128,25 +130,30 @@ function Scenario() {
   const supersededKeys = new Set(rows.filter((r) => r.grade && rows.some((x) => x.code === r.code && x.semester > r.semester && x.grade)).map((r) => r.key));
 
   const setGrade = (key: string, g: Letter | '') => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, grade: g } : r)));
+  // Ders yalnızca açıldığı dönemde alınabilir: Güz dersi bu döneme (Güz), Bahar dersi bir sonraki döneme (Bahar) eklenir
+  const spring = springTermOf(D);
+  const targetSem = (code: string) => ((catalogCourse(code)?.semester ?? D.semester) % 2 === D.semester % 2 ? D.semester : spring.semester);
   const addRow = (c: { code: string; name: string; ects: number }, kind: 'elective' | 'retake', grade: Letter) =>
-    setRows((rs) => [...rs, { key: `${c.code}@${D.semester}+`, code: c.code, name: c.name, ects: c.ects, semester: D.semester, grade, orig: '', added: kind, attempt: rs.filter((x) => x.code === c.code).length + 1 }]);
+    setRows((rs) => [...rs, { key: `${c.code}@${targetSem(c.code)}+`, code: c.code, name: c.name, ects: c.ects, semester: targetSem(c.code), grade, orig: '', added: kind, attempt: rs.filter((x) => x.code === c.code).length + 1 }]);
 
   // Alttan alınabilecek dersler: son notu FF/TT olan ve bu dönem alınmayanlar + (not yükseltme) DD/DC
   const latestNow = latestAttempts(rows);
-  const inTerm = (code: string) => rows.some((r) => r.code === code && r.semester === D.semester);
+  const inTerm = (code: string) => rows.some((r) => r.code === code && r.semester >= D.semester);
   const failedNow = latestNow.filter((r) => (r.grade === 'FF' || r.grade === 'TT') && !inTerm(r.code));
   const lowNow = latestNow.filter((r) => (r.grade === 'DD' || r.grade === 'DC') && !inTerm(r.code));
-  const pool = [...FALL_POOL, ...CURRICULUM.filter((c) => c.semester >= D.semester && c.type === 'Seçmeli')].filter((c) => !rows.some((r) => r.code === c.code));
+  // seçmeli havuzu: bu Güz açılan (≤ şu anki yarıyıl) ve gelecek Bahar açılan (≤ bir sonraki yarıyıl) teknik seçmeliler, hiç alınmamış olanlar
+  const pool = CATALOG.filter((c) => c.type === 'Seçmeli' && c.semester <= spring.semester && !rows.some((r) => r.code === c.code))
+    .sort((a, b) => a.semester - b.semester || a.code.localeCompare(b.code));
 
   // Etki analizi kartı: başarısız derslerin farklı notlarla geçilmesi
   const failedAll = latestAttempts(initial).filter((r) => r.grade === 'FF' || r.grade === 'TT');
   const projected = (code: string, g: Letter) => {
-    const exists = rows.find((r) => r.code === code && r.semester === D.semester);
-    const next = exists ? rows.map((r) => (r === exists ? { ...r, grade: g } : r)) : [...rows, { ...rows.find((r) => r.code === code)!, key: 'tmp', semester: D.semester, grade: g }];
+    const exists = rows.find((r) => r.code === code && r.semester >= D.semester);
+    const next = exists ? rows.map((r) => (r === exists ? { ...r, grade: g } : r)) : [...rows, { ...rows.find((r) => r.code === code)!, key: 'tmp', semester: targetSem(code), grade: g }];
     return cumulativeGpa(next);
   };
   const applyRetake = (code: string, g: Letter) => {
-    const exists = rows.find((r) => r.code === code && r.semester === D.semester);
+    const exists = rows.find((r) => r.code === code && r.semester >= D.semester);
     if (exists) setGrade(exists.key, g);
     else { const r = rows.find((x) => x.code === code)!; addRow(r, 'retake', g); }
   };
@@ -201,13 +208,13 @@ function Scenario() {
       )}
 
       <div className="scenario-terms">
-        {[...D.terms].reverse().map((t) => {
+        {[...(rows.some((r) => r.semester === spring.semester) ? [{ semester: spring.semester, name: `${spring.name} (planlanan)` }] : []), ...[...D.terms].reverse()].map((t) => {
           const list = rows.filter((r) => r.semester === t.semester);
           return (
             <Card key={t.name} className="sc-term">
               <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
                 <h2>{t.name} <span className="muted small">· {t.semester}. Yarıyıl</span></h2>
-                {t.semester === D.semester && <Chip tone="info">Devam ediyor</Chip>}
+                {t.semester === D.semester && <Chip tone="info">Devam ediyor</Chip>}{t.semester > D.semester && <Chip tone="new">Senaryo</Chip>}
               </div>
               <ul className="sc-list">
                 {list.map((r) => {
@@ -224,7 +231,7 @@ function Scenario() {
                       <span className="mono small muted">{r.ects} AKTS</span>
                       {staj ? <span className="small muted">{r.grade || 'Rapor'} · staj</span> : (
                         <select value={r.grade} disabled={old} onChange={(e) => setGrade(r.key, e.target.value as Letter | '')} aria-label={`${r.code} harf notu`} className={cx('letter-sel', mod && 'mod')}>
-                          {t.semester === D.semester && <option value="">Seçilmedi</option>}
+                          {t.semester >= D.semester && <option value="">Seçilmedi</option>}
                           {[...LETTERS, ...(r.orig === 'TT' ? ['TT' as Letter] : [])].map((l) => <option key={l} value={l}>{l}</option>)}
                         </select>
                       )}
@@ -241,7 +248,7 @@ function Scenario() {
       </div>
 
       <Modal open={adding} onClose={() => setAdding(false)} title="Senaryoya ders ekle" width={580}>
-        <p className="muted small"><Info size={13} style={{ verticalAlign: '-2px' }} /> Eklenen ders aktif döneme ({D.semester}. yarıyıl) eklenir. Alttan eklenen dersin yeni notu eski notun yerine geçer.</p>
+        <p className="muted small"><Info size={13} style={{ verticalAlign: '-2px' }} /> Ders açıldığı döneme eklenir: Güz dersleri bu döneme ({D.semester}. yarıyıl), Bahar dersleri {springTermOf(D).name} dönemine. Alttan eklenen dersin yeni notu eski notun yerine geçer.</p>
         {failedNow.length > 0 && <>
           <span className="eyebrow">Başarısız dersi alttan al</span>
           <ul className="pick-list">
@@ -276,7 +283,7 @@ function Scenario() {
             <li key={c.code}>
               <button onClick={() => { addRow(c, 'elective', 'BB'); setAdding(false); }}>
                 <span><span className="mono small muted">{c.code}</span> {c.name}</span>
-                <span className="mono small muted">{c.ects} AKTS · {c.semester}. yy · BB ile</span>
+                <span className="mono small muted">{c.ects} AKTS · {c.semester}. yy · {c.semester % 2 ? 'Güz' : 'Bahar'} · BB ile</span>
                 <Plus size={16} />
               </button>
             </li>
