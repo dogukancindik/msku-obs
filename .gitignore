@@ -1,0 +1,17 @@
+# bağımlılıklar ve derleme çıktıları (npm install / npm run build ile yeniden oluşur)
+node_modules/
+dist/
+.vite/
+*.local
+
+# işletim sistemi / editör
+.DS_Store
+.vscode/
+.idea/
+
+# Claude Code kişisel ayarları (launch.json paylaşılır)
+.claude/settings.local.json
+
+# ortam değişkenleri
+.env
+.env.*
