@@ -25,7 +25,7 @@ npm run dev        # http://localhost:5173
 **Gerekenler:** [Node.js 18+](https://nodejs.org) ve Git.
 
 ```bash
-git clone https://github.com/<depo-sahibi>/msku-obs.git
+git clone https://github.com/dogukancindik/msku-obs.git
 cd msku-obs
 npm install
 npm run dev        # http://localhost:5173
