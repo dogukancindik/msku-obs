@@ -3,6 +3,7 @@ import { useApp } from './lib/store';
 import { MobileNav, SessionGuard, Sidebar, Toasts, TopBar } from './components/Shell';
 import { CommandPalette } from './components/Palette';
 import { navFor } from './components/nav';
+import { t } from './lib/i18n';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
@@ -23,13 +24,13 @@ const PAGES: Record<string, () => JSX.Element> = {
 };
 
 export default function App() {
-  const { route, auth } = useApp();
+  const { route, auth, settings } = useApp();
   const [menu, setMenu] = useState(false);
 
   useEffect(() => {
-    const t = !auth ? 'Giriş' : navFor(route.path)?.label ?? 'Ana Sayfa';
-    document.title = `${t} · MSKÜ OBS`;
-  }, [route.path, auth]);
+    const title = !auth ? t('Giriş') : t(navFor(route.path)?.label ?? 'Ana Sayfa');
+    document.title = `${title} · MSKÜ OBS`;
+  }, [route.path, auth, settings.lang]);
 
   useEffect(() => {
     if (auth && route.path === 'login') window.location.hash = '#/dashboard';
@@ -47,7 +48,7 @@ export default function App() {
   const Page = PAGES[route.path] ?? Dashboard;
   return (
     <div className="app">
-      <a className="skip-link" href="#main">İçeriğe geç</a>
+      <a className="skip-link" href="#main">{t('İçeriğe geç')}</a>
       <Sidebar open={menu} onClose={() => setMenu(false)} />
       <div className="main-col">
         <TopBar onMenu={() => setMenu(true)} />

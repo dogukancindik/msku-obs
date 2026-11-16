@@ -2,6 +2,8 @@
 // Öğrenci profili TAMAMEN KURGUSALDIR. Müfredat (ders kodları, adları, AKTS, öğretim üyeleri)
 // MSKÜ Yazılım Mühendisliği (%100 İngilizce) programından alınmıştır; notlar örnek amaçlı üretilmiştir.
 
+import { t as tr } from '../lib/i18n';
+
 export const today = (() => {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -71,9 +73,10 @@ export type Course = {
   section?: number; // aktif dönemde kayıtlı olunan şube
   clash?: boolean; // devam zorunluluğu olmayan alttan ders, başka bir dersle çakışıyor (programa yerleşmez)
   deferReason?: 'limit' | 'clash'; // ertelenen müfredat dersinde neden
+  score?: number; // kesinleşmiş ders ortalaması (100 üzerinden, harf notuyla tutarlı)
 };
 
-export const typeLabel = (t: CourseType) => (t === 'Seçmeli' ? 'Teknik Seçmeli' : t === 'Üniversite Seçmeli' ? 'Bölüm Dışı Seçmeli' : t);
+export const typeLabel = (x: CourseType) => tr(x === 'Seçmeli' ? 'Teknik Seçmeli' : x === 'Üniversite Seçmeli' ? 'Bölüm Dışı Seçmeli' : x);
 
 const C = (semester: number, code: string, name: string, ects: number, type: CourseType, instructor: string | undefined, t: number, u: number, grade?: Letter): Course =>
   ({ semester, code, name, ects, type, instructor, t, u, grade, elective: type === 'Seçmeli' });
@@ -129,10 +132,10 @@ export const CURRICULUM: Course[] = [
   C(6, 'SE 3510', 'Introduction to Big Data Analysis', 6, 'Seçmeli', 'Prof. Dr. Bekir Taner Dinçer', 3, 0),
   // ---- 7. yarıyıl
   C(7, 'SE 4001', 'Summer Practice II', 1, 'Zorunlu', 'Dr. Öğr. Üyesi Tuğba Süzek', 0, 0),
-  C(7, 'SE 4003', 'Multidisciplinary Engineering Projects', 5, 'Zorunlu', 'Doç. Dr. Selim Yılmaz', 2, 2),
+  C(7, 'SE 4011', 'Software Process Improvement', 5, 'Zorunlu', 'Dr. Öğr. Üyesi Erkut Tekeli', 3, 0), // [yer tutucu] kredi dengesi için zorunlu bölüm dersi
   C(7, 'SE 4007', 'Secure Software Development', 5, 'Zorunlu', 'Dr. Öğr. Üyesi Erkut Tekeli', 3, 0), // [yer tutucu] eksik zorunlu kredi
   C(7, 'ÜSD 0415', 'Bilim ve Teknoloji Tarihi', 5, 'Üniversite Seçmeli', 'Ortak Seçmeli Havuzu', 2, 0),
-  C(7, 'ÜSD 0521', 'Sürdürülebilir Kalkınma ve Toplum', 5, 'Üniversite Seçmeli', 'Ortak Seçmeli Havuzu', 2, 0),
+  C(7, 'ÜSD 0430', 'İş Hayatında İletişim ve Sunum', 5, 'Üniversite Seçmeli', 'Ortak Seçmeli Havuzu', 2, 0), // Multidisciplinary Engineering Projects yerine (ENG 3500 ile aynı ders olduğu için kaldırıldı)
   C(7, 'ENG 3500', 'Interdisciplinary Engineering Project', 3, 'Disiplinlerarası Proje', 'Fakülte Ortak Dersi', 2, 0),
   C(7, 'SE 4005', 'Human Computer Interaction', 6, 'Seçmeli', 'Doç. Dr. Emine Elif Tülay', 3, 0),
   C(7, 'SE 4501', 'Advanced Topics in Software Engineering I', 6, 'Seçmeli', 'Öğr. Gör. Dr. Övgü Öztürk Ergün', 3, 0),
@@ -161,7 +164,7 @@ export const FALL_POOL: Course[] = [
  * Bölüm içi teknik seçmeli ders sayısı — yarıyıl bazında. 8 ders × 6 AKTS = 48 AKTS.
  * Her yarıyıl 30 AKTS olacak şekilde planlanmıştır:
  *  1–3: 30 zorunlu · 4: 22 zorunlu + 8 bölüm dışı · 5: 13 zorunlu + 5 bölüm dışı + 2×6 teknik
- *  6: 18 zorunlu + 2×6 teknik · 7: 11 zorunlu + 3 disiplinlerarası + 10 bölüm dışı + 1×6 teknik · 8: 12 zorunlu + 3×6 teknik
+ *  6: 18 zorunlu + 2×6 teknik · 7: 11 zorunlu (SE 4001, SE 4007, SE 4011) + 3 disiplinlerarası (ENG 3500) + 10 bölüm dışı (ÜSD 0415, ÜSD 0430) + 1×6 teknik · 8: 12 zorunlu + 3×6 teknik
  *  Toplam: 166 zorunlu + 48 teknik + 23 bölüm dışı + 3 disiplinlerarası = 240
  */
 export const ELECTIVES_REQUIRED: Record<number, number> = { 5: 2, 6: 2, 7: 1, 8: 3 };

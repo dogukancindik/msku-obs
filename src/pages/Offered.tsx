@@ -6,6 +6,7 @@ import { cx } from '../lib/util';
 import { useApp, useData } from '../lib/store';
 import { loadDraft, springTermOf } from '../lib/registration';
 import { Card, Chip, PageHeader, Segmented } from '../components/ui';
+import { t, tOpt, term as termLabel } from '../lib/i18n';
 
 type Season = 'Güz' | 'Bahar';
 
@@ -30,21 +31,21 @@ export default function Offered() {
 
   return (
     <>
-      <PageHeader title="Açılan Bölüm Dersleri" sub={`${season === 'Güz' ? student.term : spring.name} · Yazılım Mühendisliği · ${all.length} ders · saatler bölüm ders programından`} />
+      <PageHeader title={t('Açılan Bölüm Dersleri')} sub={`${termLabel(season === 'Güz' ? student.term : spring.name)} · ${t('Yazılım Mühendisliği')} · ${t('{n} ders', { n: all.length })} · ${t('saatler bölüm ders programından')}`} />
       <Card className="">
         <div className="filter-bar">
-          <Segmented<Season> label="Dönem" value={season} onChange={(s) => go('offered', s === 'Bahar' ? { season: 'Bahar' } : undefined)} options={[{ value: 'Güz', label: `${student.term}` }, { value: 'Bahar', label: `${spring.name}` }]} />
+          <Segmented<Season> label={t('Dönem')} value={season} onChange={(s) => go('offered', s === 'Bahar' ? { season: 'Bahar' } : undefined)} options={[{ value: 'Güz', label: termLabel(student.term) }, { value: 'Bahar', label: termLabel(spring.name) }]} />
           <label className="input-icon">
             <Search size={16} aria-hidden />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ders kodu, adı veya öğretim üyesi ara" aria-label="Ders ara" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Ders kodu, adı veya öğretim üyesi ara')} aria-label={t('Ders ara')} />
           </label>
-          <Segmented label="Sınıf" value={year} onChange={setYear} options={[{ value: 'all', label: 'Tüm sınıflar' }, { value: '1', label: '1. Sınıf' }, { value: '2', label: '2. Sınıf' }, { value: '3', label: '3. Sınıf' }, { value: '4', label: '4. Sınıf' }]} />
-          <Segmented label="Tür" value={type} onChange={setType} options={[{ value: 'all', label: 'Tümü' }, { value: 'Zorunlu', label: 'Zorunlu' }, { value: 'Seçmeli', label: 'Teknik Seçmeli' }, { value: 'Diğer', label: 'Bölüm Dışı / Proje' }]} />
+          <Segmented label={t('Sınıf')} value={year} onChange={setYear} options={[{ value: 'all', label: t('Tüm sınıflar') }, ...(['1', '2', '3', '4'] as const).map((n) => ({ value: n, label: t('{n}. Sınıf', { n }) }))]} />
+          <Segmented label={t('Tür')} value={type} onChange={setType} options={[{ value: 'all', label: t('Tümü') }, { value: 'Zorunlu', label: t('Zorunlu') }, { value: 'Seçmeli', label: t('Teknik Seçmeli') }, { value: 'Diğer', label: t('Bölüm Dışı / Proje') }]} />
         </div>
-        <p className="small muted mb12">{list.length} ders listeleniyor{season === 'Bahar' && <> · <button className="link-btn" onClick={() => go('courses', { tab: 'spring' })}>Bahar ders kaydı taslağına git →</button></>}</p>
+        <p className="small muted mb12">{t('{n} ders listeleniyor', { n: list.length })}{season === 'Bahar' && <> · <button className="link-btn" onClick={() => go('courses', { tab: 'spring' })}>{t('Bahar ders kaydı taslağına git')} <span className="dir-icon">→</span></button></>}</p>
         <div className="table-scroll">
           <table className="atable">
-            <thead><tr><th>Kod</th><th>Ders adı</th><th className="num">Sınıf</th><th>Tür</th><th className="num" title="Haftalık Teori + Uygulama saati">T+U</th><th className="num">AKTS</th><th>Öğretim üyesi</th><th>Şube · Saat</th></tr></thead>
+            <thead><tr><th>{t('Kod')}</th><th>{t('Ders adı')}</th><th className="num">{t('Sınıf')}</th><th>{t('Tür')}</th><th className="num" title={t('Haftalık Teori + Uygulama saati')}>{t('T+U')}</th><th className="num">{t('AKTS')}</th><th>{t('Öğretim üyesi')}</th><th>{t('Şube · Saat')}</th></tr></thead>
             <tbody>
               {list.map((c) => {
                 const m = mine(c.code);
@@ -52,17 +53,17 @@ export default function Offered() {
                 return (
                   <tr key={c.code} className={cx((m || d) && 'row-mine')}>
                     <td className="mono small">{c.code}</td>
-                    <td><strong>{c.name}</strong>{m && <Chip tone="success">Aldığınız ders · Şube {m.section}</Chip>}{d && <Chip tone="success">Kayıt taslağınızda</Chip>}</td>
+                    <td><strong>{c.name}</strong>{m && <Chip tone="success">{t('Aldığınız ders')} · {t('Şube')} {m.section}</Chip>}{d && <Chip tone={draft?.status === 'submitted' ? 'info' : 'success'}>{draft?.status === 'submitted' ? t('Danışman onayında') : t('Kayıt taslağınızda')}</Chip>}</td>
                     <td className="num mono">{c.year}</td>
                     <td><Chip tone={c.type === 'Zorunlu' ? 'brand' : c.type === 'Seçmeli' ? 'info' : 'neutral'}>{typeLabel(c.type)}</Chip></td>
                     <td className="num mono">{c.t}+{c.u}</td>
                     <td className="num mono">{c.ects}</td>
-                    <td className="small muted">{c.instructor ?? 'Henüz atanmadı'}</td>
-                    <td className="small">{Array.from({ length: c.sections }, (_, i) => i + 1).map((s) => <span key={s} className="block">{c.sections > 1 && <strong>Şube {s}: </strong>}{slotText(slotsOf(c.code, s))}</span>)}</td>
+                    <td className="small muted">{c.instructor ? tOpt(c.instructor) : t('Henüz atanmadı')}</td>
+                    <td className="small">{Array.from({ length: c.sections }, (_, i) => i + 1).map((s) => <span key={s} className="block">{c.sections > 1 && <strong>{t('Şube')} {s}: </strong>}{slotText(slotsOf(c.code, s))}</span>)}</td>
                   </tr>
                 );
               })}
-              {list.length === 0 && <tr><td colSpan={8} className="center muted">Aramanızla eşleşen ders yok. Filtreleri temizlemeyi deneyin.</td></tr>}
+              {list.length === 0 && <tr><td colSpan={8} className="center muted">{t('Aramanızla eşleşen ders yok. Filtreleri temizlemeyi deneyin.')}</td></tr>}
             </tbody>
           </table>
         </div>

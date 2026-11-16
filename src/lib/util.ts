@@ -1,3 +1,4 @@
+import { locale, t } from './i18n';
 import { Course, GradeRow, Letter, POINTS, WEEKS, isFail, isGpaGrade, today } from '../data/msku';
 
 export type Lang = 'tr' | 'en';
@@ -8,20 +9,23 @@ export const toMin = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
   return h * 60 + m;
 };
-export const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-export const DAYS_SHORT = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+// gün adları seçili dile göre (0 = Pazartesi); DAYS[i] / DAYS_SHORT[i] her erişimde yerelleştirilir
+const dayName = (i: number, weekday: 'long' | 'short') => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday });
+const dayList = (weekday: 'long' | 'short') => new Proxy([] as string[], { get: (_, p) => (typeof p === 'string' && /^\d+$/.test(p) ? dayName(+p, weekday) : p === 'length' ? 7 : undefined) });
+export const DAYS = dayList('long');
+export const DAYS_SHORT = dayList('short');
 export const weekday = (d: Date) => (d.getDay() + 6) % 7; // Monday = 0
-export const fmtDate = (d: Date, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' }) => d.toLocaleDateString('tr-TR', opts);
+export const fmtDate = (d: Date, opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' }) => d.toLocaleDateString(locale(), opts);
 export const fmtTime = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 export const daysUntil = (d: Date) => Math.round((new Date(d).setHours(0, 0, 0, 0) - today.getTime()) / 86400000);
 export const inDays = (d: Date) => {
   const n = daysUntil(d);
-  if (n === 0) return 'bugün';
-  if (n === 1) return 'yarın';
-  if (n === -1) return 'dün';
-  return n > 0 ? `${n} gün sonra` : `${-n} gün önce`;
+  if (n === 0) return t('bugün');
+  if (n === 1) return t('yarın');
+  if (n === -1) return t('dün');
+  return n > 0 ? t('{n} gün sonra', { n }) : t('{n} gün önce', { n: -n });
 };
-export const relDays = (n: number) => (n === 0 ? 'bugün' : n === 1 ? 'dün' : `${n} gün önce`);
+export const relDays = (n: number) => (n === 0 ? t('bugün') : n === 1 ? t('dün') : t('{n} gün önce', { n }));
 export const NEW_DAYS = 3;
 export const isNew = (announced?: number) => announced !== undefined && announced <= NEW_DAYS;
 
@@ -91,16 +95,16 @@ export const contrast = (a: string, b: string) => {
 
 export function passwordStrength(p: string) {
   const checks = [
-    { ok: p.length >= 8, label: 'En az 8 karakter' },
-    { ok: /[A-ZÇĞİÖŞÜ]/.test(p), label: 'Bir büyük harf' },
-    { ok: /[a-zçğıöşü]/.test(p), label: 'Bir küçük harf' },
-    { ok: /\d/.test(p), label: 'Bir rakam' },
-    { ok: /[^A-Za-z0-9ÇĞİÖŞÜçğıöşü]/.test(p), label: 'Bir sembol (!?*…)' },
+    { ok: p.length >= 8, label: t('En az 8 karakter') },
+    { ok: /[A-ZÇĞİÖŞÜ]/.test(p), label: t('Bir büyük harf') },
+    { ok: /[a-zçğıöşü]/.test(p), label: t('Bir küçük harf') },
+    { ok: /\d/.test(p), label: t('Bir rakam') },
+    { ok: /[^A-Za-z0-9ÇĞİÖŞÜçğıöşü]/.test(p), label: t('Bir sembol (!?*…)') },
   ];
   let score = checks.filter((c) => c.ok).length;
   if (p.length >= 12 && score >= 4) score = 5;
   if (p.length < 8) score = Math.min(score, 2);
-  const label = ['Çok zayıf', 'Çok zayıf', 'Zayıf', 'Orta', 'İyi', 'Güçlü'][score];
+  const label = t(['Çok zayıf', 'Çok zayıf', 'Zayıf', 'Orta', 'İyi', 'Güçlü'][score]);
   const tone = score <= 2 ? 'danger' : score === 3 ? 'warning' : 'success';
   return { score, label, tone, checks };
 }

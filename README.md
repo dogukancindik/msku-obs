@@ -54,9 +54,9 @@ Sonra GitHub'da **Compare & pull request** ile PR aç; diğer kişi inceleyip **
 | Alınan Dersler & Ders Kayıt | Kesinleştirme ve danışman onayı rozetleri, AKTS çubuğu. Her satırda yalnızca 2 etiketli buton var: **Ders İçeriği** (yan çekmece) ve **Programda Gör** (takvimde vurgular). |
 | Mezuniyet Kredisi Talebi | Dönemlik AKTS sınırı (AGNO 2.00 altı: 30 · 2.00–2.99: 36 · 3.00 ve üstü: 40) ve şartları sağlayana (4. sınıf, 156 AKTS, AGNO ≥ 2.00) 42 AKTS'ye kadar talep formu. Şartlar sağlanmıyorsa eksikler gösterilir. |
 | Not Listesi | Ders başına ayrı tablo yerine tek tablo, "Bekleniyor" rozeti, sınıf ortalamasıyla fark. **Final Hesaplayıcı:** yarıyıl içi %40 + final %60; finalden alınacak nota göre ortalama ve harf notu, her harf için gereken en düşük final notu (geçme notu ve final alt sınırı 40). |
-| Transkript & Senaryo | Uygulama içinde resmi transkript önizlemesi ve **PDF İndir / Yazdır**. What-if simülatörü: yeni AGNO, YANO ve fark (+ yeşil / − kırmızı) canlı hesaplanır; **Sıfırla** düğmesi var. |
+| Transkript & Senaryo | Uygulama içinde resmi transkript önizlemesi ve **PDF İndir / Yazdır**. What-if simülatörü: yeni AGNO, dönem ortalaması ve fark (+ yeşil / − kırmızı) canlı hesaplanır; **Sıfırla** düğmesi var. |
 | Müfredat & Mezuniyet | Dört ilerleme çubuğu (AKTS, zorunlu, seçmeli, staj). 1–8. yarıyıl sekmeleri ve durum filtresi. |
-| Dönem Ortalamaları | Sade tablo ve tek grafik: YANO çubuk, AGNO çizgi olarak; üzerine gelince ayrıntı (tooltip) gösterir. |
+| Dönem Ortalamaları | Sade tablo ve tek grafik: dönem ortalaması çubuk, AGNO çizgi olarak; üzerine gelince ayrıntı (tooltip) gösterir. |
 | Devamsızlık Durumu | İlerleme çubuğu ve Güvenli / Dikkat / Kritik rozetleri. **Haftalık detay** modalı. |
 | Ders Programı & Sınav Takvimi | Ardışık saatler tek blokta birleşir. Detaylı/Sade geçişi ve **Programı Yazdır** butonu. Sınav tipi filtresi ve geri sayım rozeti. |
 | Açılan Bölüm Dersleri | Arama kutusu, sınıf (1–4) ve tür filtresi. |
@@ -87,7 +87,7 @@ React 18 + TypeScript + Vite, ikonlar için lucide-react. Grafikler harici küt�
 
 ```
 src/data/msku.ts      müfredat, kurgusal öğrenci, notlar, program, sınavlar, mesajlar
-src/lib/util.ts       AGNO/YANO, devamsızlık, şifre gücü, tarih yardımcıları
+src/lib/util.ts       AGNO/dönem ortalaması, devamsızlık, şifre gücü, tarih yardımcıları
 src/lib/store.tsx     oturum, isim/numara türetme, dönem, mesajlar, profil, tema
 src/pages/            11 OBS sayfası + Login
 ```

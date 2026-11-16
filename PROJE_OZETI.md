@@ -130,9 +130,9 @@ Tamamı (28 madde, ciddiyet derecesi ve ilkelerle birlikte) **`docs/heuristic-ev
 | **Ana Sayfa** | Dört **tıklanabilir** özet kartı (üzerine gelince yükselir ve ↗ çıkar): AGNO, Aktif Dönem, Mezuniyet İlerlemesi, Devamsızlık Özeti. Devamsızlık kartı, sınıra yakın ders varsa adını ve kalan saati gösterir. Altında sıradaki dersler, yaklaşan sınavlar (geri sayımlı), duyurular ve hoca mesajları. |
 | **Alınan Dersler & Ders Kayıt** | "Kesinleştirildi" ve "Onaylandı" rozetleri, AKTS çubuğu (AGNO'ya göre üst sınır). Her derste yalnızca 2 etiketli buton: **Ders İçeriği** (yan çekmece: şube, T+U, AKTS, öğretim üyesi, derslik, ders amacı) ve **Programda Gör** (programda o dersi vurgular). |
 | **Not Listesi** | Tek tablo: Vize, Ödev/Proje, Final ("Bekleniyor" rozeti), sınıf ortalaması, fark oku ve durum rozeti. **Final Hesaplayıcı:** finalden alınacak nota göre ortalama ve harf notunu canlı hesaplar, her harf için gereken en düşük final notunu gösterir. |
-| **Transkript & Senaryo** | Sekme 1: uygulama içinde resmi transkript önizlemesi ve **PDF İndir / Yazdır** (T.C. numarası gösterilmez). Sekme 2: **What-if simülatörü**; harf notunu değiştir veya seçmeli ekle, yeni AGNO, YANO ve fark (+ yeşil / − kırmızı) anında hesaplanır, **Sıfırla** düğmesi var. |
+| **Transkript & Senaryo** | Sekme 1: uygulama içinde resmi transkript önizlemesi ve **PDF İndir / Yazdır** (T.C. numarası gösterilmez). Sekme 2: **What-if simülatörü**; harf notunu değiştir veya seçmeli ekle, yeni AGNO, dönem ortalaması ve fark (+ yeşil / − kırmızı) anında hesaplanır, **Sıfırla** düğmesi var. |
 | **Müfredat & Mezuniyet** | İlerleme çubukları: Toplam AKTS, Zorunlu (166), Bölüm İçi Teknik Seçmeli (48), Bölüm Dışı Seçmeli (23), Disiplinlerarası Proje (3), Staj. Altında 1–8. yarıyıl sekmeleri ve durum filtresi (Tümü / Tamamlandı / Alınıyor / Alınmadı). |
-| **Dönem Ortalamaları** | Sade tablo ve tek grafik (YANO çubuk, AGNO çizgi, üzerine gelince ayrıntı). Aktif dönem 0.00 olarak çizilmez, "Devam" olarak işaretlenir. |
+| **Dönem Ortalamaları** | Sade tablo ve tek grafik (dönem ortalaması çubuk, AGNO çizgi, üzerine gelince ayrıntı). Aktif dönem 0.00 olarak çizilmez, "Devam" olarak işaretlenir. |
 | **Devamsızlık Durumu** | Her ders için ilerleme çubuğu, `9 / 12 Saat (%75)` gösterimi, renk + ikon + metin rozetleri (Güvenli / Dikkat — Sınıra Yakın / Kritik Sınır). **Haftalık detay** penceresi hangi haftada kaç saat devamsızlık yapıldığını gösterir. |
 | **Mezuniyet Kredisi Talebi** | Dönemlik AKTS sınırı tablosu, şartların kontrolü (4. sınıf, en az 156 AKTS, AGNO ≥ 2.00) ve 42 AKTS'ye kadar talep formu. Şart sağlanmıyorsa eksikler kırmızıyla ve en erken başvuru dönemiyle gösterilir. |
 | **Ders Programı & Sınav Takvimi** | Ardışık saatler **tek blokta** (`08:30 – 12:15`). **Detaylı / Sade** görünüm geçişi ve **Programı Yazdır** (A4'e sığar). Sınav takviminde tip filtresi (Ara Sınav / Yarıyıl Sonu / Bütünleme), derslik, saat ve geri sayım rozeti. |
@@ -164,7 +164,7 @@ Tamamı (28 madde, ciddiyet derecesi ve ilkelerle birlikte) **`docs/heuristic-ev
 | Sınıf | 2, 3 veya 4 (aktif dönem 2026-2027 Güz → 3., 5. veya 7. yarıyıl) |
 | Öğrenci numarası | Hazırlık yılı + `0717` + 3 hane (ör. 4. sınıf → `22…`, 3. sınıf → `23…`) |
 | Danışman | Bölüm hocalarından biri |
-| Geçmiş notlar, AGNO, YANO | Müfredattaki dersler; öğrenciye özgü başarı düzeyiyle |
+| Geçmiş notlar, AGNO, dönem ortalaması | Müfredattaki dersler; öğrenciye özgü başarı düzeyiyle |
 | Bu dönemin dersleri | O yarıyılın zorunluları ve seçmeli havuzundan seçilenler |
 | Haftalık program | Çakışmasız; sabah 08:30–12:15, öğleden sonra 13:30–17:15 blokları |
 | Sınavlar, devamsızlık, mesajlar | Derslere göre üretilir; mesajlar kullanıcı başına ayrı saklanır |
@@ -298,7 +298,8 @@ Sunum için derleme: `npm run build` → `dist/` klasörü oluşur.
   6. Sınırlılıklar, soru-cevap (2–3 dk)
 
 ### Prototipte iyileştirilebilecekler (isteğe bağlı)
-- [x] Kredi matematiği düzeltildi: her yarıyıl 30 AKTS; 166 zorunlu + 48 teknik + 23 bölüm dışı + 3 disiplinlerarası = 240. Eksik 11 zorunlu AKTS için **yer tutucu** dersler eklendi: SE 4007 Secure Software Development (5, 7. yy) ve SE 4004 Professional Practice and Entrepreneurship in Software (6, 8. yy). Gerçek ders adları bulunursa değiştirilmeli. Bölüm dışı seçmeliler: ÜSD 0203 (5) + ÜSD 0412 Proje Geliştirme (3) 4. yy, ÜSD 0310 (5) 5. yy, ÜSD 0415 + ÜSD 0521 (5+5) 7. yy.
+- [x] Kredi matematiği düzeltildi: her yarıyıl 30 AKTS; 166 zorunlu + 48 teknik + 23 bölüm dışı + 3 disiplinlerarası = 240. Eksik 11 zorunlu AKTS için **yer tutucu** dersler eklendi: SE 4007 Secure Software Development (5, 7. yy) ve SE 4004 Professional Practice and Entrepreneurship in Software (6, 8. yy). Gerçek ders adları bulunursa değiştirilmeli. Bölüm dışı seçmeliler: ÜSD 0203 (5) + ÜSD 0412 Proje Geliştirme (3) 4. yy, ÜSD 0310 (5) 5. yy, ÜSD 0415 + ÜSD 0430 (5+5) 7. yy.
+- [x] **SE 4003 Multidisciplinary Engineering Projects kaldırıldı**: ENG 3500 Interdisciplinary Engineering Project ile aynı ders (bölümde kullanılan ad Interdisciplinary). Yerine 7. yy'a bölüm dışı seçmeli ÜSD 0430 İş Hayatında İletişim ve Sunum (5) geldi. Mezuniyet şartları (166/48/23/3) değişmesin diye daha önce doldurma amacıyla eklenen ÜSD 0521 kaldırılıp yerine yer tutucu zorunlu SE 4011 Software Process Improvement (5) kondu. Yer tutucu zorunlular: SE 4007, SE 4011, SE 4004 — gerçek ders adları bulunursa değiştirilmeli.
 - [ ] Müfredatta öğretim üyesi belirtilmemiş seçmelilere (SE 3504, SE 4503, SE 4505, SE 4504, SE 4510) profil üretilirken rastgele bir bölüm hocası atanıyor; gerçek hocalar yazılabilir.
 - [ ] Bahar dönemi ders kaydı (taslak, ders ekle/çıkar, çakışma kontrolü) henüz yok. Şu an güz dönemi onaylanmış kayıt gösteriliyor.
 - [ ] Ad/soyad sözlüğü (`src/data/names.ts`) genişletilebilir.
@@ -323,3 +324,22 @@ Sunum için derleme: `npm run build` → `dist/` klasörü oluşur.
 - Aktif dönemde çakışan ders: devam zorunluysa alınmaz ("saat çakışması" ile ertelenir); devam zorunluluğu olmayan (FF) alttan ders kayıtlı olur ama programa yerleşmez, yalnızca sınavına girilir.
 - `src/lib/registration.ts` + Ders Kayıt sayfasındaki **Bahar Ders Kaydı** sekmesi (2/4/6/8. yarıyıl): Bahar'da açılan alttan dersler önce ve kilitli (zorunlular), ertelenen dersler, yeni yarıyılın zorunluları, teknik seçmeli havuzu; AKTS sınırı, şube seçimi, çakışma, seçmeli sayısı kontrolü; Taslak → Danışmana gönder → Kayıt haftası. Taslak `msku.springReg` içinde kullanıcı başına saklanır.
 - Tutarlılık testi (`runSelfCheck`) artık ders programı, şubeler, hocalar, sınavlar (hafta sonu/çakışma yok), mesajlar ve önerilen Bahar taslağını da denetler. Son çalıştırma: 1800 profil, 0 hata. 30 rastgele kullanıcı × 16 sayfa tarama testi: 0 çökme / "undefined" / "NaN".
+
+### Dil desteği (Türkçe / English / Deutsch / العربية)
+- Giriş ekranının sağ üstünde ve uygulamada üst barda (🌐) dil seçici; Hesap → Görünüm'de de var. Seçim `msku.settings.lang` içinde saklanır.
+- Arayüz metinleri Türkçe yazılır ve `t('…')` ile sarılır (`src/lib/i18n.ts`); çeviriler `src/i18n/dict.ts` içinde `Türkçe → [EN, DE, AR]`. Değişkenler: `t('{n} ders', { n })`. **Yeni metin eklerken sözlüğe de eklenmeli.**
+- Tarih/gün adları seçili dile göre biçimlenir; Arapçada sayfa sağdan sola döner (CSS mantıksal özellikler + `[dir='rtl']` kuralları).
+- Bilerek çevrilmeyenler: kişi ve hoca adları, ders adları (Bölüm dışı seçmelilerin Türkçe adları dahil), hocaların mesaj içerikleri.
+- Eksik çeviri kontrolü: başka bir dil seçiliyken `window.__i18nMissing` sözlükte bulunmayan metinleri listeler.
+
+### Bahar kaydında şube seçimi
+- Öğrencinin seçtiği şube sabitlenir (`Draft.pinned`); sistem onu kendiliğinden değiştirmez. Şube listesinde her seçeneğin hangi dersle çakıştığı yazar; haftalık takvim önizlemesi seçime göre güncellenir, çakışan bloklar yan yana ve taralı gösterilir. Çakışma uyarıları çözüm önerir ("SE 1004 için Şube 1 çakışmasız").
+
+### Son kontrol (16 Kasım 2026)
+- Giriş: boş alan / yanlış uzantı hataları, kalan deneme sayısı, 5 hatada 30 sn kilit, büyük/küçük harf duyarsız şifre, e-Devlet bağlantısı (giris.turkiye.gov.tr) — çalışıyor.
+- Tutarlılık: AGNO (Ana Sayfa = Dönem Ortalamaları = Transkript), tamamlanan AKTS (Ana Sayfa = Müfredat = Transkript = Ortalamalar), aktif dönem ders/AKTS, devamsızlık özeti, okunmamış mesaj rozeti — 12 kullanıcıda birebir aynı.
+- 240 AKTS: plan her yarıyıl 30, kategoriler 166/48/23/3; teknik seçmeli havuzu 131 AKTS. Kural testi ve bağımsız hesap denetimi 0 hata.
+- Dönem seçici: geçmiş dönemde Not Listesi (100 üzerinden ders ortalaması + harf + ağırlıklı puan + dönem/AGNO), Dersler, Devamsızlık (notlarla tutarlı; TT derste sınır aşılmış) gösterilir; Transkript seçilen döneme kayar.
+- Hesap: fotoğraf yükleme/kaydetme, ad-telefon kaydı, şifre değiştirme (eski şifre geçersizleşir), yazı boyutu, yüksek kontrast, renk körü modu, animasyon azaltma, koyu tema — kalıcı.
+- Dil: 4 dil × 5 kullanıcı × 16 sayfa = 320 yükleme, 0 hata; kodda 579 çeviri anahtarı, sözlükte eksik yok.
+- Mobil (375 px): hiçbir sayfa yatay taşmıyor; tablolar kendi kutusunda kayar; dil düğmesi mobilde görünür.

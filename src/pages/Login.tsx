@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowRight, Eye, EyeOff, KeyRound, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { checkPassword, nameFromEmail, useApp } from '../lib/store';
 import { Logo } from '../components/ui';
+import { LangMenu } from '../components/Shell';
+import { t } from '../lib/i18n';
 import { EMAIL_DOMAIN } from '../data/msku';
 import { cx } from '../lib/util';
 
@@ -34,10 +36,10 @@ export default function Login() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const next: typeof err = {};
-    if (!user.trim()) next.user = 'Kurumsal e-posta adresinizi veya kullanıcı adınızı yazın.';
-    else if (typedDomain && !email.endsWith(EMAIL_DOMAIN)) next.user = `Yalnızca ${EMAIL_DOMAIN} uzantılı kurumsal adresler kabul edilir. Kullanıcı adınızı yazmanız yeterli.`;
-    else if (!/^[a-z0-9._-]+$/i.test(email.replace(EMAIL_DOMAIN, ''))) next.user = 'Kullanıcı adı yalnızca harf, rakam, nokta ve tire içerebilir.';
-    if (!pw) next.pw = 'Şifrenizi yazın.';
+    if (!user.trim()) next.user = t('Kurumsal e-posta adresinizi veya kullanıcı adınızı yazın.');
+    else if (typedDomain && !email.endsWith(EMAIL_DOMAIN)) next.user = t('Yalnızca {d} uzantılı kurumsal adresler kabul edilir. Kullanıcı adınızı yazmanız yeterli.', { d: EMAIL_DOMAIN });
+    else if (!/^[a-z0-9._-]+$/i.test(email.replace(EMAIL_DOMAIN, ''))) next.user = t('Kullanıcı adı yalnızca harf, rakam, nokta ve tire içerebilir.');
+    if (!pw) next.pw = t('Şifrenizi yazın.');
     if (locked) return;
     if (!Object.keys(next).length && !checkPassword(email, pw)) {
       const f = fails + 1;
@@ -46,8 +48,8 @@ export default function Login() {
         setLockUntil(Date.now() + 30000);
         setNow(Date.now());
         setFails(0);
-        next.pw = 'Çok fazla hatalı deneme. Güvenliğiniz için 30 saniye bekleyin.';
-      } else next.pw = `E-posta veya şifre hatalı. ${5 - f} deneme hakkınız kaldı.`;
+        next.pw = t('Çok fazla hatalı deneme. Güvenliğiniz için 30 saniye bekleyin.');
+      } else next.pw = t('E-posta veya şifre hatalı. {n} deneme hakkınız kaldı.', { n: 5 - f });
     }
     setErr(next);
     if (Object.keys(next).length) return;
@@ -65,28 +67,29 @@ export default function Login() {
         <div className="lb-top">
           <Logo size={88} className="on-dark" />
           <div>
-            <strong>Muğla Sıtkı Koçman Üniversitesi</strong>
-            <span>Öğrenci Bilgi Sistemi</span>
+            <strong>{t('Muğla Sıtkı Koçman Üniversitesi')}</strong>
+            <span>{t('Öğrenci Bilgi Sistemi')}</span>
           </div>
         </div>
       </section>
 
       <section className="login-panel">
+        <div className="login-lang"><LangMenu variant="pill" /></div>
         <form className="login-form" onSubmit={submit} noValidate>
           <div className="lf-head">
-            <h2>Giriş yap</h2>
-            <p className="muted">Kurumsal e-posta adresin ve OBS şifrenle giriş yap.</p>
+            <h2>{t('Giriş yap')}</h2>
+            <p className="muted">{t('Kurumsal e-posta adresin ve OBS şifrenle giriş yap.')}</p>
           </div>
 
           <label className="field">
-            <span>Kurumsal e-posta</span>
+            <span>{t('Kurumsal e-posta')}</span>
             <div className={cx('input-group', err.user && 'invalid')}>
               <Mail size={16} aria-hidden />
               <input
                 autoFocus
                 value={user}
                 onChange={(e) => { setUser(e.target.value.replace(/\s/g, '')); setErr((x) => ({ ...x, user: undefined })); }}
-                placeholder="ad.soyad"
+                placeholder={t('ad.soyad')}
                 autoComplete="username"
                 inputMode="email"
                 aria-invalid={!!err.user}
@@ -97,12 +100,12 @@ export default function Login() {
             {err.user ? (
               <span className="field-error" id="user-help"><AlertCircle size={13} /> {err.user}</span>
             ) : (
-              <span className="field-hint" id="user-help">{email && <>Giriş adresi: <strong>{email}</strong> · Hoş geldin, <strong>{nameFromEmail(email)}</strong></>}</span>
+              <span className="field-hint" id="user-help">{email && <>{t('Giriş adresi:')} <strong>{email}</strong> · {t('Hoş geldin,')} <strong>{nameFromEmail(email)}</strong></>}</span>
             )}
           </label>
 
           <label className="field">
-            <span>Şifre</span>
+            <span>{t('Şifre')}</span>
             <div className={cx('input-group', err.pw && 'invalid')}>
               <Lock size={16} aria-hidden />
               <input
@@ -114,22 +117,22 @@ export default function Login() {
                 autoComplete="current-password"
                 aria-invalid={!!err.pw}
               />
-              <button type="button" className="icon-btn sm" onClick={() => setShow(!show)} aria-label={show ? 'Şifreyi gizle' : 'Şifreyi göster'} aria-pressed={show}>
+              <button type="button" className="icon-btn sm" onClick={() => setShow(!show)} aria-label={show ? t('Şifreyi gizle') : t('Şifreyi göster')} aria-pressed={show}>
                 {show ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {err.pw && <span className="field-error"><AlertCircle size={13} /> {err.pw}</span>}
-            {caps && <span className="field-warn"><KeyRound size={13} /> Caps Lock açık.</span>}
+            {caps && <span className="field-warn"><KeyRound size={13} /> {t('Caps Lock açık.')}</span>}
           </label>
 
           <button className="btn btn-primary btn-lg" type="submit" disabled={busy || locked}>
-            {busy ? <><Loader2 size={18} className="spin" /> Giriş yapılıyor…</> : locked ? <>Tekrar deneyin: {Math.ceil((lockUntil - now) / 1000)} sn</> : <>Giriş yap <ArrowRight size={18} /></>}
+            {busy ? <><Loader2 size={18} className="spin" /> {t('Giriş yapılıyor…')}</> : locked ? <>{t('Tekrar deneyin: {n} sn', { n: Math.ceil((lockUntil - now) / 1000) })}</> : <>{t('Giriş yap')} <ArrowRight size={18} className="dir-icon" /></>}
           </button>
 
-          <div className="login-or" aria-hidden><span>veya</span></div>
+          <div className="login-or" aria-hidden><span>{t('veya')}</span></div>
           {/* Yalnızca e-Devlet giriş sayfasına yönlendirir; kimlik bilgisi alınmaz. */}
           <a className="btn btn-lg btn-edevlet" href={EDEVLET_URL} rel="noopener noreferrer">
-            <ShieldCheck size={18} aria-hidden /> e-Devlet ile Giriş
+            <ShieldCheck size={18} aria-hidden /> {t('e-Devlet ile Giriş')}
           </a>
         </form>
       </section>

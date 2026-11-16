@@ -177,6 +177,13 @@ export function generate(email: string, displayName: string): StudentData {
     const later = taken.find((x) => x.code === c.code && x.semester > c.semester);
     if (later) { c.retakenIn = later.semester; c.superseded = !!later.grade; }
   }
+  // geçmiş derslerin 100 üzerinden ders ortalaması: harf aralığının içinde, e-posta+ders+dönem'e göre sabit
+  // (ana rastgele sayı dizisini etkilemesin diye ayrı özetle). TT ve staj (YT/YZ) için ortalama yoktur.
+  const RANGE: Partial<Record<Letter, [number, number]>> = { AA: [90, 100], BA: [85, 89], BB: [80, 84], CB: [75, 79], CC: [60, 74], DC: [50, 59], DD: [40, 49], FF: [15, 39] };
+  for (const c of taken) {
+    const rg = c.grade && RANGE[c.grade];
+    if (rg) c.score = rg[0] + (hash(`${email}|${c.code}|${c.semester}`) % (rg[1] - rg[0] + 1));
+  }
   const latest = latestAttempts(taken);
   const current = taken.filter((c) => c.semester === semester);
   const failed: StudentData['failed'] = latest.filter((c) => isFail(c.grade) && c.grade !== 'YZ').map((c) => ({

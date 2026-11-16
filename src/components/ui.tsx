@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n';
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cx } from '../lib/util';
@@ -97,7 +98,7 @@ export function Drawer({ open, onClose, title, children, footer }: { open: boole
       <aside className="drawer" role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Kapat"><X size={18} /></button>
+          <button className="icon-btn" onClick={onClose} aria-label={t('Kapat')}><X size={18} /></button>
         </div>
         <div className="drawer-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
@@ -137,7 +138,7 @@ export function Modal({ open, onClose, title, children, footer, width = 520 }: {
       <div className="modal" role="dialog" aria-modal="true" aria-label={title} ref={ref} style={{ maxWidth: width }}>
         <div className="modal-head">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Kapat"><X size={18} /></button>
+          <button className="icon-btn" onClick={onClose} aria-label={t('Kapat')}><X size={18} /></button>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
@@ -154,5 +155,5 @@ export function Muted({ children }: { children: React.ReactNode }) {
 export function Logo({ size = 42, className }: { size?: number; className?: string }) {
   const [failed, setFailed] = React.useState(false);
   if (failed) return <div className={cx('logo-mark', className)} style={{ width: size, height: size }} aria-hidden>MSKÜ</div>;
-  return <img className={cx('logo-img', className)} src="msku-logo.png" alt="Muğla Sıtkı Koçman Üniversitesi logosu" width={size} height={size} onError={() => setFailed(true)} />;
+  return <img className={cx('logo-img', className)} src="msku-logo.png" alt={t('Muğla Sıtkı Koçman Üniversitesi logosu')} width={size} height={size} onError={() => setFailed(true)} />;
 }
