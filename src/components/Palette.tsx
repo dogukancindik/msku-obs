@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Calculator, CalendarClock, CornerDownLeft, Download, KeyRound, Moon, PenSquare, Search } from 'lucide-react';
 import { useApp, useData } from '../lib/store';
@@ -25,18 +26,18 @@ export function CommandPalette() {
   }, [palette]);
 
   const cmds = useMemo<Cmd[]>(() => {
-    const pages: Cmd[] = ALL_NAV.map((n) => ({ id: 'p-' + n.path, label: n.label, hint: 'Sayfa', icon: n.icon, run: () => go(n.path), keywords: n.keywords ?? '' }));
+    const pages: Cmd[] = ALL_NAV.map((n) => ({ id: 'p-' + n.path, label: t(n.label), hint: t('Sayfa'), icon: n.icon, run: () => go(n.path), keywords: `${n.label} ${n.keywords ?? ''}` }));
     const actions: Cmd[] = [
-      { id: 'a-pdf', label: 'Transkripti PDF indir / yazdır', hint: 'İşlem', icon: Download, run: () => go('transcript', { print: '1' }), keywords: 'transkript pdf yazdır indir' },
-      { id: 'a-what', label: 'Transkript senaryosu (AGNO hesapla)', hint: 'İşlem', icon: Calculator, run: () => go('transcript', { tab: 'scenario' }), keywords: 'senaryo what-if agno hesapla' },
-      { id: 'a-exams', label: 'Sınav takvimini aç', hint: 'İşlem', icon: CalendarClock, run: () => go('schedule', { tab: 'exams' }), keywords: 'sınav takvim vize final' },
-      { id: 'a-pw', label: 'Şifre değiştir', hint: 'İşlem', icon: KeyRound, run: () => go('account', { section: 'password' }), keywords: 'şifre parola password' },
-      { id: 'a-new', label: 'Yeni mesaj yaz', hint: 'İşlem', icon: PenSquare, run: () => go('messages', { tab: 'compose' }), keywords: 'mesaj yaz hoca' },
-      { id: 'a-theme', label: 'Koyu / açık tema', hint: 'Ayar', icon: Moon, run: () => set('theme', settings.theme === 'dark' ? 'light' : 'dark'), keywords: 'tema koyu dark' },
+      { id: 'a-pdf', label: t('Transkripti PDF indir / yazdır'), hint: t('İşlem'), icon: Download, run: () => go('transcript', { print: '1' }), keywords: 'transkript pdf yazdır indir' },
+      { id: 'a-what', label: t('Transkript senaryosu (AGNO hesapla)'), hint: t('İşlem'), icon: Calculator, run: () => go('transcript', { tab: 'scenario' }), keywords: 'senaryo what-if agno hesapla' },
+      { id: 'a-exams', label: t('Sınav takvimini aç'), hint: t('İşlem'), icon: CalendarClock, run: () => go('schedule', { tab: 'exams' }), keywords: 'sınav takvim vize final' },
+      { id: 'a-pw', label: t('Şifre değiştir'), hint: t('İşlem'), icon: KeyRound, run: () => go('account', { section: 'password' }), keywords: 'şifre parola password' },
+      { id: 'a-new', label: t('Yeni mesaj yaz'), hint: t('İşlem'), icon: PenSquare, run: () => go('messages', { tab: 'compose' }), keywords: 'mesaj yaz hoca' },
+      { id: 'a-theme', label: t('Koyu / açık tema'), hint: t('Ayar'), icon: Moon, run: () => set('theme', settings.theme === 'dark' ? 'light' : 'dark'), keywords: 'tema koyu dark' },
     ];
-    const cs: Cmd[] = D.current.map((c) => ({ id: 'c-' + c.code, label: `${c.code} · ${c.name}`, hint: c.clash || c.t + c.u === 0 ? 'Ders bilgisi' : 'Programda gör', icon: BookOpen, run: () => (c.clash || c.t + c.u === 0 ? go('courses') : go('schedule', { course: c.code })), keywords: `${c.code} ${c.code.replace(' ', '')} ${c.name}` }));
+    const cs: Cmd[] = D.current.map((c) => ({ id: 'c-' + c.code, label: `${c.code} · ${c.name}`, hint: c.clash || c.t + c.u === 0 ? t('Ders bilgisi') : t('Programda gör'), icon: BookOpen, run: () => (c.clash || c.t + c.u === 0 ? go('courses') : go('schedule', { course: c.code })), keywords: `${c.code} ${c.code.replace(' ', '')} ${c.name}` }));
     return [...actions, ...pages, ...cs];
-  }, [go, set, settings.theme]);
+  }, [go, set, settings.theme, settings.lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const results = useMemo(() => {
     const n = norm(q.trim());
@@ -52,15 +53,15 @@ export function CommandPalette() {
   };
   return (
     <div className="modal-backdrop top" onMouseDown={(e) => e.target === e.currentTarget && setPalette(false)}>
-      <div className="palette" role="dialog" aria-modal="true" aria-label={'Komut paleti'}>
+      <div className="palette" role="dialog" aria-modal="true" aria-label={t('Komut paleti')}>
         <div className="palette-input">
           <Search size={18} aria-hidden />
           <input
             ref={inputRef}
             value={q}
             onChange={(e) => { setQ(e.target.value); setSel(0); }}
-            placeholder={'Örn. "notlar", "SE 3011", "transkript"'}
-            aria-label={'Ara'}
+            placeholder={t('Örn. "notlar", "SE 3011", "transkript"')}
+            aria-label={t('Ara')}
             onKeyDown={(e) => {
               if (e.key === 'ArrowDown') { e.preventDefault(); setSel((s) => Math.min(s + 1, results.length - 1)); }
               if (e.key === 'ArrowUp') { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
@@ -71,7 +72,7 @@ export function CommandPalette() {
           <kbd>Esc</kbd>
         </div>
         <ul className="palette-list" role="listbox">
-          {results.length === 0 && <li className="palette-empty">{'Sonuç yok. Farklı bir kelime deneyin.'}</li>}
+          {results.length === 0 && <li className="palette-empty">{t('Sonuç yok. Farklı bir kelime deneyin.')}</li>}
           {results.map((c, i) => {
             const Icon = c.icon;
             return (
@@ -87,9 +88,9 @@ export function CommandPalette() {
           })}
         </ul>
         <div className="palette-foot">
-          <span><kbd>↑</kbd><kbd>↓</kbd> {'gezin'}</span>
-          <span><kbd>↵</kbd> {'aç'}</span>
-          <span className="muted">{'Uzman kullanıcılar için kısayol — menü her zaman yanınızda.'}</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> {t('gezin')}</span>
+          <span><kbd>↵</kbd> {t('aç')}</span>
+          <span className="muted">{t('Uzman kullanıcılar için kısayol — menü her zaman yanınızda.')}</span>
         </div>
       </div>
     </div>

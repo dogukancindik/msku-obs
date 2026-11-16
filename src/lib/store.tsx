@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { Message, student } from '../data/msku';
 import { splitJoined, turkishWord } from '../data/names';
 import { generate, type StudentData } from './academic';
+import { applyLang, type Lang } from './i18n';
 
 // ---------- storage helpers (wrapped: storage may be unavailable) ----------
 const read = <T,>(store: 'local' | 'session', key: string, fallback: T): T => {
@@ -23,8 +24,8 @@ const write = (store: 'local' | 'session', key: string, v: unknown) => {
   }
 };
 
-export type Settings = { theme: 'light' | 'dark'; scale: 1 | 1.125 | 1.25; contrast: 'normal' | 'high'; cbSafe: boolean; reduceMotion: boolean };
-const defaultSettings: Settings = { theme: 'light', scale: 1, contrast: 'normal', cbSafe: false, reduceMotion: false };
+export type Settings = { theme: 'light' | 'dark'; scale: 1 | 1.125 | 1.25; contrast: 'normal' | 'high'; cbSafe: boolean; reduceMotion: boolean; lang: Lang };
+const defaultSettings: Settings = { theme: 'light', scale: 1, contrast: 'normal', cbSafe: false, reduceMotion: false, lang: 'tr' };
 
 export type Auth = { email: string; password: string } | null;
 export type Profile = { firstName?: string; lastName?: string; name?: string; avatar?: string; phone: string };
@@ -125,6 +126,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [sessionEnds, setSessionEnds] = useState(() => Date.now() + SESSION_MS);
   const [palette, setPalette] = useState(false);
   const toastId = useRef(1);
+  applyLang(settings.lang); // render sırasında: tüm bileşenler aynı dili görür
 
   useEffect(() => {
     const el = document.documentElement;

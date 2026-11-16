@@ -6,6 +6,7 @@ import { DAYS, DAYS_SHORT, cx, daysUntil, fmtDate, fmtTime, inDays, toMin, weekd
 import { Button, Chip, PageHeader, Segmented, Tabs } from '../components/ui';
 import { today } from '../data/msku';
 import { PastTerm } from './Courses';
+import { t, tOpt, term as termLabel } from '../lib/i18n';
 
 type Tab = 'program' | 'exams';
 const PALETTE = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
@@ -19,9 +20,9 @@ export default function Schedule() {
   const highlight = route.query.get('course');
   return (
     <>
-      <PageHeader title="Ders Programı & Sınav Takvimi" sub={`${student.term} · ${D.current.length} ders`} />
-      <Tabs<Tab> label="Program sekmeleri" value={tab} onChange={(t) => { setTab(t); if (highlight) go('schedule', t === 'exams' ? { tab: 'exams' } : undefined); }}
-        tabs={[{ value: 'program', label: 'Haftalık Ders Programı' }, { value: 'exams', label: 'Sınav Takvimi', count: D.exams.filter((e) => daysUntil(e.date) >= 0).length }]} />
+      <PageHeader title={t('Ders Programı & Sınav Takvimi')} sub={`${termLabel(student.term)} · ${t('{n} ders', { n: D.current.length })}`} />
+      <Tabs<Tab> label={t('Program sekmeleri')} value={tab} onChange={(v) => { setTab(v); if (highlight) go('schedule', v === 'exams' ? { tab: 'exams' } : undefined); }}
+        tabs={[{ value: 'program', label: t('Haftalık Ders Programı') }, { value: 'exams', label: t('Sınav Takvimi'), count: D.exams.filter((e) => daysUntil(e.date) >= 0).length }]} />
       {tab === 'program' ? <Program highlight={highlight} /> : <Exams />}
     </>
   );
@@ -43,18 +44,18 @@ function Program({ highlight }: { highlight: string | null }) {
         {hc ? (
           <div className="hl-banner" role="status">
             <span className={cx('hl-sw', colorOf(D, hc.code))} />
-            <span><strong>{hc.code} {hc.name}</strong> vurgulanıyor · {D.schedule.filter((s) => s.code === hc.code).map((s) => `${DAYS[s.day]} ${s.start}–${s.end}`).join(', ')}</span>
-            <button className="icon-btn sm" onClick={() => go('schedule')} aria-label="Vurguyu kaldır"><X size={14} /></button>
+            <span><strong>{hc.code} {hc.name}</strong> {t('vurgulanıyor')} · {D.schedule.filter((s) => s.code === hc.code).map((s) => `${DAYS[s.day]} ${s.start}–${s.end}`).join(', ')}</span>
+            <button className="icon-btn sm" onClick={() => go('schedule')} aria-label={t('Vurguyu kaldır')}><X size={14} /></button>
           </div>
-        ) : <span className="muted small">Ardışık ders saatleri tek blok olarak gösterilir.</span>}
+        ) : <span className="muted small">{t('Ardışık ders saatleri tek blok olarak gösterilir.')}</span>}
         <div className="row">
-          <Segmented<'detail' | 'simple'> label="Görünüm" value={mode} onChange={setMode} options={[{ value: 'detail', label: 'Detaylı Görünüm' }, { value: 'simple', label: 'Sade Görünüm' }]} />
-          <Button variant="secondary" size="sm" onClick={() => window.print()}><Printer size={15} /> Programı Yazdır</Button>
+          <Segmented<'detail' | 'simple'> label={t('Görünüm')} value={mode} onChange={setMode} options={[{ value: 'detail', label: t('Detaylı Görünüm') }, { value: 'simple', label: t('Sade Görünüm') }]} />
+          <Button variant="secondary" size="sm" onClick={() => window.print()}><Printer size={15} /> {t('Programı Yazdır')}</Button>
         </div>
       </div>
 
       <div className="tt-card card print-area">
-        <div className="print-only print-head"><strong>MSKÜ · {me.name} · {student.term} Haftalık Ders Programı</strong></div>
+        <div className="print-only print-head"><strong>MSKÜ · {me.name} · {termLabel(student.term)} {t('Haftalık Ders Programı')}</strong></div>
         <div className={cx('tt', mode)}>
           <div className="tt-hours">
             {hours.map((h) => <span key={h} style={{ top: `${pct(toMin(h))}%` }}>{h}</span>)}
@@ -63,7 +64,7 @@ function Program({ highlight }: { highlight: string | null }) {
             <div key={d} className={cx('tt-day', d === wd && 'today')}>
               <div className="tt-dname">
                 <span className="only-wide">{DAYS[d]}</span><span className="only-narrow">{DAYS_SHORT[d]}</span>
-                {d === wd && <span className="today-pill">Bugün</span>}
+                {d === wd && <span className="today-pill">{t('Bugün')}</span>}
               </div>
               <div className="tt-col">
                 {hours.map((h) => <span key={h} className="tt-line" style={{ top: `${pct(toMin(h))}%` }} />)}
@@ -78,8 +79,8 @@ function Program({ highlight }: { highlight: string | null }) {
                       <span className="mono">{s.start} – {s.end}</span>
                       {mode === 'detail' && <>
                         <span><MapPin size={11} /> {s.room}</span>
-                        <span><User size={11} /> {c.instructor}</span>
-                        <span className="tb-kind">{s.kind}</span>
+                        <span><User size={11} /> {tOpt(c.instructor ?? '')}</span>
+                        <span className="tb-kind">{t(s.kind)}</span>
                       </>}
                     </div>
                   );
@@ -89,8 +90,8 @@ function Program({ highlight }: { highlight: string | null }) {
           ))}
         </div>
       </div>
-      {D.current.filter((c) => c.t + c.u === 0).map((c) => <p key={c.code} className="muted small mt12">{c.code} {c.name} dersinin haftalık saati yoktur.</p>)}
-      {D.current.filter((c) => c.clash).map((c) => <p key={c.code} className="small txt-warning mt12">{c.code} {c.name} (alttan, devam zorunluluğu yok) şube {c.section} saatleri başka bir dersinizle çakıştığı için programa eklenmedi; yalnızca sınavlarına girersiniz.</p>)}
+      {D.current.filter((c) => c.t + c.u === 0).map((c) => <p key={c.code} className="muted small mt12">{t('{x} dersinin haftalık saati yoktur.', { x: `${c.code} ${c.name}` })}</p>)}
+      {D.current.filter((c) => c.clash).map((c) => <p key={c.code} className="small txt-warning mt12">{t('{x} (alttan, devam zorunluluğu yok) şube {n} saatleri başka bir dersinizle çakıştığı için programa eklenmedi; yalnızca sınavlarına girersiniz.', { x: `${c.code} ${c.name}`, n: c.section ?? 1 })}</p>)}
     </>
   );
 }
@@ -105,8 +106,8 @@ function Exams() {
   return (
     <>
       <div className="sched-tools">
-        <Segmented<F> label="Sınav tipi" value={f} onChange={setF} options={[{ value: 'all', label: 'Tümü' }, { value: 'Ara Sınav', label: 'Ara Sınav' }, { value: 'Yarıyıl Sonu', label: 'Yarıyıl Sonu' }, { value: 'Bütünleme', label: 'Bütünleme' }]} />
-        <label className="check"><input type="checkbox" checked={past} onChange={(e) => setPast(e.target.checked)} /> Geçmiş sınavları göster</label>
+        <Segmented<F> label={t('Sınav tipi')} value={f} onChange={setF} options={[{ value: 'all', label: t('Tümü') }, { value: 'Ara Sınav', label: t('Ara Sınav') }, { value: 'Yarıyıl Sonu', label: t('Yarıyıl Sonu') }, { value: 'Bütünleme', label: t('Bütünleme') }]} />
+        <label className="check"><input type="checkbox" checked={past} onChange={(e) => setPast(e.target.checked)} /> {t('Geçmiş sınavları göster')}</label>
       </div>
       <div className="exam-list">
         {list.map((e) => {
@@ -122,20 +123,20 @@ function Exams() {
                 <div className="er-body">
                   <div className="row" style={{ flexWrap: 'wrap' }}>
                     <span className="mono small muted">{e.code}</span>
-                    <Chip tone={e.type === 'Ara Sınav' ? 'info' : e.type === 'Yarıyıl Sonu' ? 'brand' : 'neutral'}>{e.type}</Chip>
+                    <Chip tone={e.type === 'Ara Sınav' ? 'info' : e.type === 'Yarıyıl Sonu' ? 'brand' : 'neutral'}>{t(e.type)}</Chip>
                   </div>
                   <strong className="er-name">{c.name}</strong>
                   <div className="er-facts small muted">
-                    <span><Clock size={13} /> {fmtTime(e.date)} · {e.durationMin} dk</span>
+                    <span><Clock size={13} /> {fmtTime(e.date)} · {t('{n} dk', { n: e.durationMin })}</span>
                     <span><MapPin size={13} /> {e.room}</span>
                   </div>
                 </div>
-                {d < 0 ? <Chip tone="neutral">Yapıldı</Chip> : <Chip tone={d <= 4 ? 'warning' : 'neutral'} icon={<CalendarClock size={12} />}>{inDays(e.date)}</Chip>}
+                {d < 0 ? <Chip tone="neutral">{t('Yapıldı')}</Chip> : <Chip tone={d <= 4 ? 'warning' : 'neutral'} icon={<CalendarClock size={12} />}>{inDays(e.date)}</Chip>}
               </article>
             </div>
           );
         })}
-        {list.length === 0 && <p className="muted">Bu filtreye uyan sınav yok.</p>}
+        {list.length === 0 && <p className="muted">{t('Bu filtreye uyan sınav yok.')}</p>}
       </div>
     </>
   );

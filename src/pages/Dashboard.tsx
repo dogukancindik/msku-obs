@@ -1,19 +1,20 @@
 import React from 'react';
 import { ArrowUpRight, BookOpen, CalendarClock, Clock, GraduationCap, Mail, MapPin, Megaphone, ShieldAlert, ShieldCheck, TrendingUp, AlertTriangle, RotateCcw } from 'lucide-react';
 import { useApp, useData } from '../lib/store';
-import { ANNOUNCEMENTS, CURRENT, ECTS_TOTAL, EXAMS, SCHEDULE, byCode, student, today } from '../data/msku';
+import { ANNOUNCEMENTS, ECTS_TOTAL, byCode, student, today } from '../data/msku';
 import { attendance, cx, DAYS, daysUntil, fmtDate, fmtGpa, fmtTime, inDays, weekday } from '../lib/util';
 import { Chip, Progress } from '../components/ui';
+import { pct as pctLabel, t, term } from '../lib/i18n';
 
 const greeting = () => {
   const h = new Date().getHours();
-  return h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
+  return h < 12 ? t('Günaydın') : h < 18 ? t('İyi günler') : t('İyi akşamlar');
 };
 
 function ActionCard({ to, query, label, icon, children, first }: { to: string; query?: Record<string, string>; label: string; icon: React.ReactNode; children: React.ReactNode; first?: boolean }) {
   const { go } = useApp();
   return (
-    <button className={cx('stat-card', first && '')} onClick={() => go(to, query)} aria-label={`${label} — ayrıntılar`}>
+    <button className={cx('stat-card', first && '')} onClick={() => go(to, query)} aria-label={t('{x} — ayrıntılar', { x: label })}>
       
       <span className="stat-top">
         <span className="stat-ic">{icon}</span>
@@ -48,8 +49,8 @@ export default function Dashboard() {
   // duyurular: sınav salonu duyurusu öğrencinin kendi yaklaşan ara sınavından (salon = ortak programdaki derslik)
   const nextMid = D.exams.filter((e) => e.type === 'Ara Sınav' && daysUntil(e.date) >= 0).sort((a, b) => +a.date - +b.date)[0];
   const announcements = [
-    ...(nextMid ? [{ id: 'a-exam', title: 'Ara sınav salon bilgisi', body: `${nextMid.code} ara sınavı ${fmtDate(nextMid.date, { day: 'numeric', month: 'long' })} ${fmtTime(nextMid.date)}’da ${nextMid.room} salonunda yapılacaktır.` }] : []),
-    ...ANNOUNCEMENTS.filter((a) => a.id !== 'a1'),
+    ...(nextMid ? [{ id: 'a-exam', title: t('Ara sınav salon bilgisi'), body: t('{code} ara sınavı {date} {time} saatinde {room} salonunda yapılacaktır.', { code: nextMid.code, date: fmtDate(nextMid.date, { day: 'numeric', month: 'long' }), time: fmtTime(nextMid.date), room: nextMid.room }) }] : []),
+    ...ANNOUNCEMENTS.filter((a) => a.id !== 'a1').map((a) => ({ ...a, title: t(a.title), body: t(a.body) })),
   ];
 
   return (
@@ -57,46 +58,46 @@ export default function Dashboard() {
       <div className="dash-hello">
         <p className="muted">{fmtDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
         <h1>{greeting()}, {me.firstName}</h1>
-        <p className="muted">{student.programShort} · {D.year}. Sınıf · {D.semester}. Yarıyıl</p>
+        <p className="muted">{t(student.programShort)} · {t('{n}. Sınıf', { n: D.year })} · {t('{n}. Yarıyıl', { n: D.semester })}</p>
       </div>
 
-      <section className="stat-grid" aria-label="Özet">
-        <ActionCard to="averages" label="Genel Ortalama (AGNO)" icon={<TrendingUp size={18} />} first>
+      <section className="stat-grid" aria-label={t('Özet')}>
+        <ActionCard to="averages" label={t('Genel Ortalama (AGNO)')} icon={<TrendingUp size={18} />} first>
           <span className="stat-value"><span className="mono">{fmtGpa(D.agno)}</span><small>/ 4.00</small></span>
           <span className="stat-sub">{D.agno < 2
-            ? <Chip tone="warning" icon={<AlertTriangle size={12} />}>2.00 altında · dönem sınırı 30 AKTS</Chip>
-            : <Chip tone="success">Son dönem YANO {fmtGpa(D.lastYano)}</Chip>}</span>
+            ? <Chip tone="warning" icon={<AlertTriangle size={12} />}>{t('2.00 altında · dönem sınırı 30 AKTS')}</Chip>
+            : <Chip tone="success">{t('Son dönem ortalaması')} {fmtGpa(D.lastYano)}</Chip>}</span>
         </ActionCard>
-        <ActionCard to="courses" label="Aktif Dönem" icon={<BookOpen size={18} />}>
-          <span className="stat-value"><span className="mono">{D.current.length}</span><small>Ders</small><span className="stat-sep">/</span><span className="mono">{ects}</span><small>AKTS</small></span>
-          <span className="stat-sub muted">{student.term} · Danışman onaylı{repeats.length ? ` · ${repeats.length} ders alttan` : ''}</span>
+        <ActionCard to="courses" label={t('Aktif Dönem')} icon={<BookOpen size={18} />}>
+          <span className="stat-value"><span className="mono">{D.current.length}</span><small>{t('Ders')}</small><span className="stat-sep">/</span><span className="mono">{ects}</span><small>{t('AKTS')}</small></span>
+          <span className="stat-sub muted">{term(student.term)} · {t('Danışman onaylı')}{repeats.length ? ` · ${t('{n} ders alttan', { n: repeats.length })}` : ''}</span>
         </ActionCard>
-        <ActionCard to="curriculum" label="Mezuniyet İlerlemesi" icon={<GraduationCap size={18} />}>
-          <span className="stat-value"><span className="mono">{D.ectsDone}</span><small>/ {ECTS_TOTAL} AKTS</small><span className="stat-pct">%{pct}</span></span>
-          <Progress value={D.ectsDone} max={ECTS_TOTAL} label="Mezuniyet ilerlemesi" />
+        <ActionCard to="curriculum" label={t('Mezuniyet İlerlemesi')} icon={<GraduationCap size={18} />}>
+          <span className="stat-value"><span className="mono">{D.ectsDone}</span><small>/ {ECTS_TOTAL} {t('AKTS')}</small><span className="stat-pct">{pctLabel(pct)}</span></span>
+          <Progress value={D.ectsDone} max={ECTS_TOTAL} label={t('Mezuniyet ilerlemesi')} />
         </ActionCard>
-        <ActionCard to="attendance" label="Devamsızlık Özeti" icon={critical.length ? <ShieldAlert size={18} /> : warn.length ? <AlertTriangle size={18} /> : <ShieldCheck size={18} />}>
+        <ActionCard to="attendance" label={t('Devamsızlık Özeti')} icon={critical.length ? <ShieldAlert size={18} /> : warn.length ? <AlertTriangle size={18} /> : <ShieldCheck size={18} />}>
           {critical.length ? (
             <>
-              <span className="stat-value text txt-danger">{over.length ? `${over.length} derste sınır aşıldı (TT)` : `${critical.length} derste kritik sınır`}</span>
-              <span className="stat-sub muted">{critical.map((x) => `${x.c.code} ${x.a.absent}/${x.a.limit} saat`).join(' · ')}</span>
+              <span className="stat-value text txt-danger">{over.length ? t('{n} derste sınır aşıldı (TT)', { n: over.length }) : t('{n} derste kritik sınır', { n: critical.length })}</span>
+              <span className="stat-sub muted">{critical.map((x) => `${x.c.code} ${x.a.absent}/${x.a.limit} ${t('saat')}`).join(' · ')}</span>
             </>
           ) : warn.length ? (
             <>
-              <span className="stat-value text txt-warning">{warn.length} derste sınıra yakın</span>
+              <span className="stat-value text txt-warning">{t('{n} derste sınıra yakın', { n: warn.length })}</span>
               <span className="att-warn-list">
                 {warn.map((x) => (
                   <span key={x.c.code} className="att-warn-item">
                     <strong>{x.c.code}</strong> {x.c.name}
-                    <span className="mono">{x.a.absent}/{x.a.limit} saat · {x.a.left} saat hakkın kaldı</span>
+                    <span className="mono">{x.a.absent}/{x.a.limit} {t('saat')} · {t('{n} saat hakkın kaldı', { n: x.a.left })}</span>
                   </span>
                 ))}
               </span>
             </>
           ) : (
             <>
-              <span className="stat-value text txt-success">Tüm dersler güvenli</span>
-              <span className="stat-sub muted">Hiçbir derste devamsızlık sınırına yaklaşmadınız</span>
+              <span className="stat-value text txt-success">{t('Tüm dersler güvenli')}</span>
+              <span className="stat-sub muted">{t('Hiçbir derste devamsızlık sınırına yaklaşmadınız')}</span>
             </>
           )}
         </ActionCard>
@@ -106,15 +107,15 @@ export default function Dashboard() {
         <div className="alert warning" role="status">
           <RotateCcw size={18} />
           <div>
-            <strong>{D.failed.length} dersi tekrar (alttan) alman gerekiyor</strong>
+            <strong>{t('{n} dersi tekrar (alttan) alman gerekiyor', { n: D.failed.length })}</strong>
             <p className="small">
-              {D.failed.map((f) => `${f.course.code} (${f.reason}${f.retaking ? ', bu dönem alınıyor' : `, ${f.offered} döneminde açılır`})`).join(' · ')}
-              {pendingFails.length > 0 && ' · Ders kaydında alttan dersler önceliklidir.'}
+              {D.failed.map((f) => `${f.course.code} (${f.reason}, ${f.retaking ? t('bu dönem alınıyor') : t('{s} döneminde açılır', { s: t(f.offered) })})`).join(' · ')}
+              {pendingFails.length > 0 && ` · ${t('Ders kaydında alttan dersler önceliklidir.')}`}
             </p>
           </div>
           <span className="row link-btn" style={{ gap: 8 }}>
-            {D.failed.some((f) => f.offered === 'Bahar') && <button className="btn btn-primary btn-sm" onClick={() => go('courses', { tab: 'spring' })}>Bahar kaydı</button>}
-            <button className="btn btn-secondary btn-sm" onClick={() => go('curriculum', { focus: 'retake' })}>Ayrıntılar</button>
+            {D.failed.some((f) => f.offered === 'Bahar') && <button className="btn btn-primary btn-sm" onClick={() => go('courses', { tab: 'spring' })}>{t('Bahar kaydı')}</button>}
+            <button className="btn btn-secondary btn-sm" onClick={() => go('curriculum', { focus: 'retake' })}>{t('Ayrıntılar')}</button>
           </span>
         </div>
       )}
@@ -122,8 +123,8 @@ export default function Dashboard() {
       <div className="dash-row">
         <button className="panel-card" onClick={() => go('schedule')}>
           <span className="panel-head">
-            <span className="card-title"><span className="card-icon"><Clock size={18} /></span><span><h2>{day === wd ? 'Bugünkü Dersler' : 'Sıradaki Dersler'}</h2>
-              <span className="card-sub">{day === wd ? DAYS[wd] : `Bugün ders yok · ${DAYS[day]}`}</span></span></span>
+            <span className="card-title"><span className="card-icon"><Clock size={18} /></span><span><h2>{day === wd ? t('Bugünkü Dersler') : t('Sıradaki Dersler')}</h2>
+              <span className="card-sub">{day === wd ? DAYS[wd] : `${t('Bugün ders yok')} · ${DAYS[day]}`}</span></span></span>
             <ArrowUpRight size={18} className="stat-go" aria-hidden />
           </span>
           <ul className="tl">
@@ -134,7 +135,7 @@ export default function Dashboard() {
                   <span className="tl-time mono">{s.start}<small>{s.end}</small></span>
                   <span className="tl-body">
                     <strong>{c.name}</strong>
-                    <span className="muted small"><MapPin size={12} /> {s.room} · {s.code} · {s.kind}</span>
+                    <span className="muted small"><MapPin size={12} /> {s.room} · {s.code} · {t(s.kind)}</span>
                   </span>
                 </li>
               );
@@ -144,7 +145,7 @@ export default function Dashboard() {
 
         <button className="panel-card" onClick={() => go('schedule', { tab: 'exams' })}>
           <span className="panel-head">
-            <span className="card-title"><span className="card-icon"><CalendarClock size={18} /></span><span><h2>Yaklaşan Sınavlar</h2><span className="card-sub">Ara sınav haftası</span></span></span>
+            <span className="card-title"><span className="card-icon"><CalendarClock size={18} /></span><span><h2>{t('Yaklaşan Sınavlar')}</h2><span className="card-sub">{t('Ara sınav haftası')}</span></span></span>
             <ArrowUpRight size={18} className="stat-go" aria-hidden />
           </span>
           <ul className="exam-mini">
@@ -153,7 +154,7 @@ export default function Dashboard() {
                 <span className="em-date"><strong>{e.date.getDate()}</strong><small>{fmtDate(e.date, { month: 'short' })}</small></span>
                 <span className="em-body">
                   <strong>{byCode(e.code)!.name}</strong>
-                  <span className="muted small">{e.type} · {fmtTime(e.date)} · {e.room}</span>
+                  <span className="muted small">{t(e.type)} · {fmtTime(e.date)} · {e.room}</span>
                 </span>
                 <Chip tone={daysUntil(e.date) <= 4 ? 'warning' : 'neutral'}>{inDays(e.date)}</Chip>
               </li>
@@ -163,7 +164,7 @@ export default function Dashboard() {
 
         <div className="panel-card static">
           <span className="panel-head">
-            <span className="card-title"><span className="card-icon"><Megaphone size={18} /></span><span><h2>Duyurular & Hoca Mesajları</h2><span className="card-sub">{inbox.filter((m) => !m.read).length} okunmamış mesaj</span></span></span>
+            <span className="card-title"><span className="card-icon"><Megaphone size={18} /></span><span><h2>{t('Duyurular & Hoca Mesajları')}</h2><span className="card-sub">{t('{n} okunmamış mesaj', { n: inbox.filter((m) => !m.read).length })}</span></span></span>
           </span>
           <ul className="ann">
             {msgs.map((m) => (
@@ -181,7 +182,7 @@ export default function Dashboard() {
               <li key={a.id}>
                 <div className="ann-item static">
                   <span className="ann-dot info" aria-hidden />
-                  <span><strong>{a.title}</strong><span className="muted small">Duyuru · {a.body}</span></span>
+                  <span><strong>{a.title}</strong><span className="muted small">{t('Duyuru')} · {a.body}</span></span>
                 </div>
               </li>
             ))}

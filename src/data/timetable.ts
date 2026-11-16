@@ -5,6 +5,7 @@
 // Kural: aynı müfredat yarıyılının dersleri (zorunlu + seçmeli havuzu + bölüm dışı) hangi şube seçilirse seçilsin
 // birbiriyle ÇAKIŞMAZ. Çakışma yalnızca farklı yarıyıllardan ders alan (alttan / ertelenmiş) öğrencilerde doğabilir.
 import { CURRICULUM, FALL_POOL, type Course, type Slot } from './msku';
+import { locale, t } from '../lib/i18n';
 
 export const CATALOG: Course[] = [...CURRICULUM, ...FALL_POOL];
 export const catalogCourse = (code: string) => CATALOG.find((c) => c.code === code);
@@ -104,8 +105,8 @@ export const slotsOf = (code: string, section = 1): Slot[] => TABLE.get(key(code
 
 export const slotsClash = (a: Slot[], b: Slot[]) => a.some((x) => b.some((y) => x.day === y.day && toMin(x.start) < toMin(y.end) && toMin(y.start) < toMin(x.end)));
 
-const DAYS_SHORT = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum'];
-export const slotText = (slots: Slot[]) => slots.length ? slots.map((s) => `${DAYS_SHORT[s.day]} ${s.start}–${s.end}`).join(' · ') : 'Haftalık saat yok';
+const dayShort = (i: number) => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'short' });
+export const slotText = (slots: Slot[]) => slots.length ? slots.map((s) => `${dayShort(s.day)} ${s.start}–${s.end}`).join(' · ') : t('Haftalık saat yok');
 
 /** Dönemde açılan dersler: Güz = tek yarıyıllar, Bahar = çift yarıyıllar */
 export const offeredIn = (season: 'Güz' | 'Bahar') => CATALOG.filter((c) => c.semester % 2 === (season === 'Güz' ? 1 : 0));

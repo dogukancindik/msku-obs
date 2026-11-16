@@ -6,6 +6,10 @@ import { CATALOG, catalogCourse } from '../data/timetable';
 import { springTermOf } from '../lib/registration';
 import { cumulativeGpa, cx, fmtGpa, gpa, latestAttempts } from '../lib/util';
 import { Button, Card, Chip, Logo, Modal, PageHeader, Tabs } from '../components/ui';
+import { locale, t as tr, term as termLabel } from '../lib/i18n';
+
+/** "İngilizce Hazırlık — Başarılı (2024-2025)" → seçili dilde */
+export const prepLabel = (p: string) => p.replace('İngilizce Hazırlık — Başarılı', tr('İngilizce Hazırlık — Başarılı'));
 
 type Tab = 'official' | 'scenario';
 
@@ -28,9 +32,9 @@ export default function Transcript() {
 
   return (
     <>
-      <PageHeader title="Transkript & Senaryo" sub="Resmi not dökümünüz ve 'ya şöyle olsaydı?' hesaplayıcısı"
-        actions={tab === 'official' && <span className=""><Button variant="primary" onClick={print}><Printer size={16} /> PDF İndir / Yazdır</Button></span>} />
-      <Tabs<Tab> label="Transkript sekmeleri" value={tab} onChange={setTab} tabs={[{ value: 'official', label: 'Resmi Transkript' }, { value: 'scenario', label: 'Transkript Senaryosu' }]} />
+      <PageHeader title={tr('Transkript & Senaryo')}
+        actions={tab === 'official' && <span className=""><Button variant="primary" onClick={print}><Printer size={16} /> {tr('PDF İndir / Yazdır')}</Button></span>} />
+      <Tabs<Tab> label={tr('Transkript sekmeleri')} value={tab} onChange={setTab} tabs={[{ value: 'official', label: tr('Resmi Transkript') }, { value: 'scenario', label: tr('Transkript Senaryosu') }]} />
       {tab === 'official' ? <Official /> : <Scenario />}
     </>
   );
@@ -38,54 +42,60 @@ export default function Transcript() {
 
 function Official() {
   const D = useData();
-  const { me } = useApp();
+  const { me, term } = useApp();
+  // dönem seçicide geçmiş bir dönem seçildiyse transkriptte o döneme git ve vurgula
+  useEffect(() => {
+    if (term === student.term) return;
+    const el = document.getElementById(`term-${term}`);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  }, [term]);
   const stats = D.stats;
-  const termOf = (n: number) => D.terms.find((t) => t.semester === n)?.name ?? `${n}. yarıyıl`;
+  const termOf = (n: number) => termLabel(D.terms.find((x) => x.semester === n)?.name ?? tr('{n}. yarıyıl', { n }));
   return (
     <div className="print-area">
       <div className="doc">
         <div className="doc-head">
           <Logo size={64} />
           <div className="doc-title">
-            <span>T.C. Muğla Sıtkı Koçman Üniversitesi · Mühendislik Fakültesi</span>
-            <strong>Transkript Belgesi</strong>
+            <span>{tr('T.C. Muğla Sıtkı Koçman Üniversitesi · Mühendislik Fakültesi')}</span>
+            <strong>{tr('Transkript Belgesi')}</strong>
           </div>
-          <span className="muted small">Düzenlenme: {new Date().toLocaleDateString('tr-TR')}</span>
+          <span className="muted small">{tr('Düzenlenme:')} {new Date().toLocaleDateString(locale())}</span>
         </div>
         <dl className="doc-meta">
-          <div><dt>Ad Soyad</dt><dd>{me.name}</dd></div>
-          <div><dt>Öğrenci No</dt><dd className="mono">{me.number}</dd></div>
-          <div><dt>Bölüm / Program</dt><dd>{student.program}</dd></div>
-          <div><dt>Hazırlık</dt><dd>{D.prep}</dd></div>
-          <div><dt>AGNO</dt><dd className="mono"><strong>{fmtGpa(D.agno)}</strong> / 4.00</dd></div>
-          <div><dt>Tamamlanan AKTS</dt><dd className="mono">{D.ectsDone}</dd></div>
+          <div><dt>{tr('Ad Soyad')}</dt><dd>{me.name}</dd></div>
+          <div><dt>{tr('Öğrenci No')}</dt><dd className="mono">{me.number}</dd></div>
+          <div><dt>{tr('Bölüm / Program')}</dt><dd>{tr(student.program)}</dd></div>
+          <div><dt>{tr('Hazırlık')}</dt><dd>{prepLabel(D.prep)}</dd></div>
+          <div><dt>{tr('AGNO')}</dt><dd className="mono"><strong>{fmtGpa(D.agno)}</strong> / 4.00</dd></div>
+          <div><dt>{tr('Tamamlanan AKTS')}</dt><dd className="mono">{D.ectsDone}</dd></div>
         </dl>
         {stats.map((t) => {
           const list = D.taken.filter((c) => c.semester === t.semester);
           return (
-            <section key={t.name} className="doc-term">
+            <section key={t.name} id={`term-${t.name}`} className={cx('doc-term', term !== student.term && t.name === term && 'sel')} style={{ scrollMarginTop: 90 }}>
               <div className="doc-term-head">
-                <strong>{t.name}</strong><span className="muted">{t.semester}. Yarıyıl</span>
+                <strong>{termLabel(t.name)}</strong><span className="muted">{tr('{n}. Yarıyıl', { n: t.semester })}</span>
                 <span className="spacer" />
-                {t.inProgress ? <Chip tone="info">Devam ediyor</Chip> : <span className="small">YANO <strong className="mono">{fmtGpa(t.yano!)}</strong> · AGNO <strong className="mono">{fmtGpa(t.agno!)}</strong></span>}
+                {t.inProgress ? <Chip tone="info">{tr('Devam ediyor')}</Chip> : <span className="small">{tr('Dönem ort.')} <strong className="mono">{fmtGpa(t.yano!)}</strong> · {tr('AGNO')} <strong className="mono">{fmtGpa(t.agno!)}</strong></span>}
               </div>
               <table className="atable compact">
-                <thead><tr><th>Kod</th><th>Ders adı</th><th>Tür</th><th className="num">T+U</th><th className="num">AKTS</th><th className="num">Harf</th><th className="num">Ağırlıklı puan</th><th>Açıklama</th></tr></thead>
+                <thead><tr><th>{tr('Kod')}</th><th>{tr('Ders adı')}</th><th>{tr('Tür')}</th><th className="num">{tr('T+U')}</th><th className="num">{tr('AKTS')}</th><th className="num">{tr('Harf')}</th><th className="num">{tr('Ağırlıklı puan')}</th><th>{tr('Açıklama')}</th></tr></thead>
                 <tbody>
                   {list.map((c) => {
                     const fail = isFail(c.grade);
                     const counts = isGpaGrade(c.grade) && !c.superseded;
                     const note = [
-                      (c.attempt ?? 1) > 1 ? `Tekrar (${c.attempt}. alış)` : '',
-                      c.grade === 'TT' ? 'Devamsızlıktan başarısız' : c.grade === 'FF' ? 'Başarısız' : '',
-                      c.retakenIn ? `${termOf(c.retakenIn)} döneminde tekrar ${c.superseded ? 'alındı*' : 'alınıyor'}` : '',
-                      c.grade === 'YT' ? 'AGNO’ya katılmaz' : '',
+                      (c.attempt ?? 1) > 1 ? tr('Tekrar ({n}. alış)', { n: c.attempt ?? 1 }) : '',
+                      c.grade === 'TT' ? tr('Devamsızlıktan başarısız') : c.grade === 'FF' ? tr('Başarısız') : '',
+                      c.retakenIn ? (c.superseded ? tr('{x} döneminde tekrar alındı*', { x: termOf(c.retakenIn) }) : tr('{x} döneminde tekrar alınıyor', { x: termOf(c.retakenIn) })) : '',
+                      c.grade === 'YT' ? tr('AGNO’ya katılmaz') : '',
                     ].filter(Boolean).join(' · ');
                     return (
                       <tr key={c.code} className={cx(c.superseded && 'row-superseded')}>
                         <td className="mono small">{c.code}</td><td>{c.name}</td><td className="small">{typeLabel(c.type)}</td>
                         <td className="num mono">{c.t}+{c.u}</td><td className="num mono">{c.ects}</td>
-                        <td className="num">{c.grade ? <strong className={cx('mono', fail && 'grade-fail', c.superseded && 'grade-old')}>{c.grade}{c.superseded ? '*' : ''}</strong> : <span className="na">Alınıyor</span>}</td>
+                        <td className="num">{c.grade ? <strong className={cx('mono', fail && 'grade-fail', c.superseded && 'grade-old')}>{c.grade}{c.superseded ? '*' : ''}</strong> : <span className="na">{tr('Alınıyor')}</span>}</td>
                         <td className="num mono">{c.grade && counts ? (POINTS[c.grade] * c.ects).toFixed(1) : '—'}</td>
                         <td className="small muted">{note}</td>
                       </tr>
@@ -97,10 +107,10 @@ function Official() {
           );
         })}
         <p className="doc-foot muted small">
-          <strong>Açıklamalar:</strong> FF: başarısız · TT: devamsızlıktan başarısız · YT/YZ: yeterli/yetersiz (staj, AGNO’ya katılmaz) ·
-          * Tekrar alınan dersin eski notu: transkriptte görünür, AGNO’ya son alınan not katılır. YANO o dönem alınan tüm notlarla hesaplanır.
+          <strong>{tr('Açıklamalar:')}</strong> {tr('FF: başarısız · TT: devamsızlıktan başarısız · YT/YZ: yeterli/yetersiz (staj, AGNO’ya katılmaz) ·')}
+          {tr('* Tekrar alınan dersin eski notu: transkriptte görünür, AGNO’ya son alınan not katılır. Dönem ortalaması o dönem alınan tüm notlarla hesaplanır.')}
         </p>
-        <p className="doc-foot muted small">Bu belge bilgi amaçlıdır. Islak imzalı/e-imzalı resmi transkript için Öğrenci İşleri Daire Başkanlığı’na başvurunuz. Kimlik numarası gizlilik nedeniyle gösterilmez.</p>
+        <p className="doc-foot muted small">{tr('Bu belge bilgi amaçlıdır. Islak imzalı/e-imzalı resmi transkript için Öğrenci İşleri Daire Başkanlığı’na başvurunuz. Kimlik numarası gizlilik nedeniyle gösterilmez.')}</p>
       </div>
     </div>
   );
@@ -161,40 +171,39 @@ function Scenario() {
   return (
     <>
       <div className="scenario-bar">
-        <div className="sb-item"><span className="eyebrow">Mevcut AGNO</span><strong className="mono">{fmtGpa(D.agno)}</strong></div>
-        <div className="sb-item hl"><span className="eyebrow">Yeni AGNO</span><strong className="mono">{fmtGpa(newAgno)}</strong></div>
-        <div className="sb-item"><span className="eyebrow">AGNO değişimi</span>
+        <div className="sb-item"><span className="eyebrow">{tr('Mevcut AGNO')}</span><strong className="mono">{fmtGpa(D.agno)}</strong></div>
+        <div className="sb-item hl"><span className="eyebrow">{tr('Yeni AGNO')}</span><strong className="mono">{fmtGpa(newAgno)}</strong></div>
+        <div className="sb-item"><span className="eyebrow">{tr('AGNO değişimi')}</span>
           <strong className={cx('mono', Math.abs(diff) < 0.005 ? '' : diff > 0 ? 'txt-success' : 'txt-danger')}>
             {Math.abs(diff) < 0.005 ? <>±0.00</> : diff > 0 ? <><ArrowUpRight size={18} />+{diff.toFixed(2)}</> : <><ArrowDownRight size={18} />{diff.toFixed(2)}</>}
           </strong>
         </div>
-        <div className="sb-item"><span className="eyebrow">YANO ({D.semester}. yarıyıl)</span><strong className="mono">{yano !== null ? fmtGpa(yano) : '—'}</strong>{yano === null && <small className="muted">Not seçin</small>}</div>
+        <div className="sb-item"><span className="eyebrow">{tr('Dönem ortalaması ({n}. yarıyıl)', { n: D.semester })}</span><strong className="mono">{yano !== null ? fmtGpa(yano) : '—'}</strong>{yano === null && <small className="muted">{tr('Not seçin')}</small>}</div>
         <div className="sb-actions">
-          <Button variant="secondary" size="sm" onClick={() => setAdding(true)}><Plus size={15} /> Ders Ekle</Button>
-          <Button variant="ghost" size="sm" onClick={() => setRows(initial)} disabled={!changed}><RotateCcw size={15} /> Sıfırla</Button>
+          <Button variant="secondary" size="sm" onClick={() => setAdding(true)}><Plus size={15} /> {tr('Ders Ekle')}</Button>
+          <Button variant="ghost" size="sm" onClick={() => setRows(initial)} disabled={!changed}><RotateCcw size={15} /> {tr('Sıfırla')}</Button>
         </div>
       </div>
       <p className="muted small mb12">
-        Harf notunu değiştirin: sonuçlar anında hesaplanır, gerçek kayıtlarınız değişmez. AGNO = Σ(not puanı × AKTS) / Σ AKTS ({totalEcts} AKTS);
-        yani <strong>AKTS’si büyük dersler AGNO’yu daha çok etkiler</strong>. Tekrar alınan derste yalnızca son not hesaba katılır.
+        {tr('Harf notunu değiştirin: sonuçlar anında hesaplanır, gerçek kayıtlarınız değişmez.')} AGNO = Σ({tr('not puanı')} × {tr('AKTS')}) / Σ {tr('AKTS')} ({totalEcts} {tr('AKTS')}); <strong>{tr('AKTS’si büyük dersler AGNO’yu daha çok etkiler')}</strong>. {tr('Tekrar alınan derste yalnızca son not hesaba katılır.')}
       </p>
 
       {failedAll.length > 0 && (
         <Card className="mb12">
           <div className="row" style={{ justifyContent: 'space-between', marginBottom: 10 }}>
-            <h2>Alttan derslerin AGNO’ya etkisi</h2>
-            <span className="small muted">Bir nota tıklayın: ders aktif döneme o notla eklenir</span>
+            <h2>{tr('Alttan derslerin AGNO’ya etkisi')}</h2>
+            <span className="small muted">{tr('Bir nota tıklayın: ders açıldığı döneme o notla eklenir')}</span>
           </div>
           <div className="impact-grid">
             {failedAll.map((f) => (
               <div key={f.code} className="impact">
-                <span><span className="mono small muted">{f.code} · {f.ects} AKTS · şu an {f.grade}</span><strong className="block">{f.name}</strong></span>
+                <span><span className="mono small muted">{f.code} · {f.ects} {tr('AKTS')} · {tr('şu an')} {f.grade}</span><strong className="block">{f.name}</strong></span>
                 <div className="impact-opts">
                   {(['DD', 'CC', 'BB', 'AA'] as Letter[]).map((g) => {
                     const p = projected(f.code, g);
                     return (
-                      <button key={g} onClick={() => applyRetake(f.code, g)} title={`${f.code} dersini ${g} ile geçersen AGNO ${fmtGpa(p)}`}>
-                        <span className="small">{g} ile</span>
+                      <button key={g} onClick={() => applyRetake(f.code, g)} title={tr('{code} dersini {g} ile geçersen AGNO {p}', { code: f.code, g, p: fmtGpa(p) })}>
+                        <span className="small">{tr('{g} ile', { g })}</span>
                         <strong>{fmtGpa(p)}</strong>
                         <small className={p - newAgno >= 0 ? 'txt-success' : 'txt-danger'}>{signed(p - newAgno)}</small>
                       </button>
@@ -208,13 +217,13 @@ function Scenario() {
       )}
 
       <div className="scenario-terms">
-        {[...(rows.some((r) => r.semester === spring.semester) ? [{ semester: spring.semester, name: `${spring.name} (planlanan)` }] : []), ...[...D.terms].reverse()].map((t) => {
+        {[...(rows.some((r) => r.semester === spring.semester) ? [{ semester: spring.semester, name: `${spring.name} (${tr('planlanan')})` }] : []), ...[...D.terms].reverse()].map((t) => {
           const list = rows.filter((r) => r.semester === t.semester);
           return (
             <Card key={t.name} className="sc-term">
               <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
-                <h2>{t.name} <span className="muted small">· {t.semester}. Yarıyıl</span></h2>
-                {t.semester === D.semester && <Chip tone="info">Devam ediyor</Chip>}{t.semester > D.semester && <Chip tone="new">Senaryo</Chip>}
+                <h2>{termLabel(t.name)} <span className="muted small">· {tr('{n}. Yarıyıl', { n: t.semester })}</span></h2>
+                {t.semester === D.semester && <Chip tone="info">{tr('Devam ediyor')}</Chip>}{t.semester > D.semester && <Chip tone="new">{tr('Senaryo')}</Chip>}
               </div>
               <ul className="sc-list">
                 {list.map((r) => {
@@ -223,21 +232,21 @@ function Scenario() {
                   const eff = mod && !old ? effectOf(r.key, r.grade) : 0;
                   const staj = r.grade === 'YT' || r.grade === 'YZ' || (r.ects === 1 && /SE [34]001/.test(r.code));
                   return (
-                    <li key={r.key} className={cx(mod && 'modified', old && 'superseded')} title={old ? 'Bu ders sonradan tekrar alındı: bu not AGNO’ya katılmaz.' : undefined}>
+                    <li key={r.key} className={cx(mod && 'modified', old && 'superseded')} title={old ? tr('Bu ders sonradan tekrar alındı: bu not AGNO’ya katılmaz.') : undefined}>
                       <span className="sc-name"><span className="mono small muted">{r.code}</span> {r.name}
-                        {r.attempt > 1 && <> <Chip tone="warning">Alttan</Chip></>}
-                        {old && <span className="att-note">Tekrar alındı — AGNO’ya katılmaz</span>}
+                        {r.attempt > 1 && <> <Chip tone="warning">{tr('Alttan')}</Chip></>}
+                        {old && <span className="att-note">{tr('Tekrar alındı — AGNO’ya katılmaz')}</span>}
                       </span>
-                      <span className="mono small muted">{r.ects} AKTS</span>
-                      {staj ? <span className="small muted">{r.grade || 'Rapor'} · staj</span> : (
-                        <select value={r.grade} disabled={old} onChange={(e) => setGrade(r.key, e.target.value as Letter | '')} aria-label={`${r.code} harf notu`} className={cx('letter-sel', mod && 'mod')}>
-                          {t.semester >= D.semester && <option value="">Seçilmedi</option>}
+                      <span className="mono small muted">{r.ects} {tr('AKTS')}</span>
+                      {staj ? <span className="small muted">{r.grade || tr('Rapor')} · {tr('staj')}</span> : (
+                        <select value={r.grade} disabled={old} onChange={(e) => setGrade(r.key, e.target.value as Letter | '')} aria-label={tr('{code} harf notu', { code: r.code })} className={cx('letter-sel', mod && 'mod')}>
+                          {t.semester >= D.semester && <option value="">{tr('Seçilmedi')}</option>}
                           {[...LETTERS, ...(r.orig === 'TT' ? ['TT' as Letter] : [])].map((l) => <option key={l} value={l}>{l}</option>)}
                         </select>
                       )}
                       {r.added ? (
-                        <button className="icon-btn sm" onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))} aria-label={`${r.code} kaldır`}><Trash2 size={14} /></button>
-                      ) : <span className={cx('sc-delta', eff > 0.004 ? 'txt-success' : eff < -0.004 ? 'txt-danger' : 'muted')} title="Bu değişikliğin AGNO’ya etkisi">{mod ? signed(eff) : ''}</span>}
+                        <button className="icon-btn sm" onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))} aria-label={tr('{code} kaldır', { code: r.code })}><Trash2 size={14} /></button>
+                      ) : <span className={cx('sc-delta', eff > 0.004 ? 'txt-success' : eff < -0.004 ? 'txt-danger' : 'muted')} title={tr('Bu değişikliğin AGNO’ya etkisi')}>{mod ? signed(eff) : ''}</span>}
                     </li>
                   );
                 })}
@@ -247,16 +256,16 @@ function Scenario() {
         })}
       </div>
 
-      <Modal open={adding} onClose={() => setAdding(false)} title="Senaryoya ders ekle" width={580}>
-        <p className="muted small"><Info size={13} style={{ verticalAlign: '-2px' }} /> Ders açıldığı döneme eklenir: Güz dersleri bu döneme ({D.semester}. yarıyıl), Bahar dersleri {springTermOf(D).name} dönemine. Alttan eklenen dersin yeni notu eski notun yerine geçer.</p>
+      <Modal open={adding} onClose={() => setAdding(false)} title={tr('Senaryoya ders ekle')} width={580}>
+        <p className="muted small"><Info size={13} style={{ verticalAlign: '-2px' }} /> {tr('Ders açıldığı döneme eklenir: Güz dersleri bu döneme ({n}. yarıyıl), Bahar dersleri {x} dönemine. Alttan eklenen dersin yeni notu eski notun yerine geçer.', { n: D.semester, x: termLabel(springTermOf(D).name) })}</p>
         {failedNow.length > 0 && <>
-          <span className="eyebrow">Başarısız dersi alttan al</span>
+          <span className="eyebrow">{tr('Başarısız dersi alttan al')}</span>
           <ul className="pick-list">
             {failedNow.map((c) => (
               <li key={c.key}>
                 <button onClick={() => { addRow(c, 'retake', 'CC'); setAdding(false); }}>
                   <span><span className="mono small muted">{c.code}</span> {c.name}</span>
-                  <span className="mono small muted">{c.ects} AKTS · şu an {c.grade} → CC ile AGNO {fmtGpa(projected(c.code, 'CC'))}</span>
+                  <span className="mono small muted">{c.ects} {tr('AKTS')} · {tr('şu an')} {c.grade} → {tr('{g} ile', { g: 'CC' })} AGNO {fmtGpa(projected(c.code, 'CC'))}</span>
                   <Plus size={16} />
                 </button>
               </li>
@@ -264,26 +273,26 @@ function Scenario() {
           </ul>
         </>}
         {lowNow.length > 0 && <>
-          <span className="eyebrow">Not yükseltmek için tekrar al (DD / DC)</span>
+          <span className="eyebrow">{tr('Not yükseltmek için tekrar al (DD / DC)')}</span>
           <ul className="pick-list">
             {lowNow.map((c) => (
               <li key={c.key}>
                 <button onClick={() => { addRow(c, 'retake', 'BB'); setAdding(false); }}>
                   <span><span className="mono small muted">{c.code}</span> {c.name}</span>
-                  <span className="mono small muted">{c.ects} AKTS · şu an {c.grade} → BB ile AGNO {fmtGpa(projected(c.code, 'BB'))}</span>
+                  <span className="mono small muted">{c.ects} {tr('AKTS')} · {tr('şu an')} {c.grade} → {tr('{g} ile', { g: 'BB' })} AGNO {fmtGpa(projected(c.code, 'BB'))}</span>
                   <Plus size={16} />
                 </button>
               </li>
             ))}
           </ul>
         </>}
-        <span className="eyebrow">Seçmeli ders ekle</span>
+        <span className="eyebrow">{tr('Seçmeli ders ekle')}</span>
         <ul className="pick-list">
           {pool.map((c) => (
             <li key={c.code}>
               <button onClick={() => { addRow(c, 'elective', 'BB'); setAdding(false); }}>
                 <span><span className="mono small muted">{c.code}</span> {c.name}</span>
-                <span className="mono small muted">{c.ects} AKTS · {c.semester}. yy · {c.semester % 2 ? 'Güz' : 'Bahar'} · BB ile</span>
+                <span className="mono small muted">{c.ects} {tr('AKTS')} · {tr('{n}. yy', { n: c.semester })} · {tr(c.semester % 2 ? 'Güz' : 'Bahar')} · {tr('{g} ile', { g: 'BB' })}</span>
                 <Plus size={16} />
               </button>
             </li>
